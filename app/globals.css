@@ -1,0 +1,232 @@
+:root {
+  --bg: #0a0b0f;
+  --panel: #14161d;
+  --panel-2: #1b1e27;
+  --line: rgba(255, 255, 255, 0.09);
+  --fg: #f3f4f6;
+  --sub: rgba(243, 244, 246, 0.55);
+  --accent: #2f81f7;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+    "Malgun Gothic", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+.wrap {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px 18px 64px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 8px 0 2px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--sub);
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+.section {
+  margin-bottom: 22px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sub);
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+/* 팀 그리드 */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.team-btn {
+  border: 2px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  border-radius: 12px;
+  padding: 12px 4px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.08s ease, border-color 0.12s ease;
+}
+
+.team-btn:active {
+  transform: scale(0.96);
+}
+
+.team-btn[data-active="true"] {
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 22%, var(--panel));
+}
+
+/* 칩 버튼 그룹 */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  border: 2px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip[data-active="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--panel));
+}
+
+select {
+  width: 100%;
+  appearance: none;
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* 미리보기 — 세로로 긴 벽지 전체가 화면 높이 안에 다 보이도록 contain */
+.preview {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--panel-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 360px;
+  max-height: 76vh;
+  position: relative;
+  margin-top: -15px;
+}
+
+.preview img {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 76vh;
+  object-fit: contain;
+  display: block;
+}
+
+.preview .ph {
+  color: var(--sub);
+  font-size: 14px;
+}
+
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 11, 15, 0.5);
+  font-size: 14px;
+  color: var(--sub);
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--line);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.urlbox {
+  margin-top: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--sub);
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.hint {
+  font-size: 12.5px;
+  color: var(--sub);
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
+.hint b {
+  color: var(--fg);
+}
+
+footer {
+  margin-top: 40px;
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.6;
+}
