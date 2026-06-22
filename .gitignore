@@ -4,3 +4,8 @@ out
 .env*.local
 *.log
 .DS_Store
+
+# local / generated
+.claude/
+next-env.d.ts
+*.png
