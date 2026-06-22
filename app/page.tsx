@@ -24,7 +24,11 @@ export default function Home() {
   const teamParam = TEAMS.find((t) => t.id === teamId)?.en ?? teamId;
   const lightOk = isStyleId(style) && supportsLight(style);
   const effMode = lightOk ? mode : "dark";
-  const path = `/api/wallpaper?team=${teamParam}&year=${year}&month=${month}&style=${style}&mode=${effMode}&res=${res}`;
+  const common = `team=${teamParam}&style=${style}&mode=${effMode}&res=${res}`;
+  // 미리보기/다운로드: 선택한 연·월 고정
+  const path = `/api/wallpaper?${common}&year=${year}&month=${month}`;
+  // 자동 업데이트 URL: 연·월 생략 → 매달 KST 현재 달로 자동 갱신
+  const autoPath = `/api/wallpaper?${common}`;
 
   // 미리보기는 실제 해상도를 쓰되 CSS로 축소
   const previewUrl = useMemo(() => path, [path]);
@@ -32,7 +36,7 @@ export default function Home() {
   // origin 은 클라이언트에서만 알 수 있으므로 mount 후 채운다 (SSR 하이드레이션 불일치 방지)
   const [origin, setOrigin] = useState("");
   useEffect(() => setOrigin(window.location.origin), []);
-  const absoluteUrl = origin + path;
+  const absoluteUrl = origin + autoPath;
 
   const yearOpts = [now.year, now.year - 1];
 
@@ -187,8 +191,11 @@ export default function Home() {
         <div className="urlbox">{absoluteUrl}</div>
 
         <div className="hint">
-          <b>iOS</b>: 단축어 앱 → “URL 콘텐츠 가져오기”에 위 URL → “배경화면 설정”. 자동화로 매일
-          실행하면 자동 갱신됩니다. · <b>Android</b>: KWGT/배경 자동변경 앱에 URL 등록.
+          <b>이 URL은 월·연도가 없어 매달 자동으로 이번 달로 바뀝니다.</b> (매일 결과 + 매달 달력
+          자동 갱신) 특정 달 이미지를 그대로 저장하려면 “PNG 다운로드”를 쓰세요.
+          <br />
+          <b>iOS</b>: 단축어 → “URL 콘텐츠 가져오기”에 위 URL → “배경화면 설정”, 자동화로 매일 실행.
+          · <b>Android</b>: KWGT/배경 자동변경 앱에 URL 등록.
         </div>
       </div>
 
