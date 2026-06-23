@@ -20,15 +20,10 @@ function Legend({ s, win }: { s: number; win: string }) {
     </div>
   );
   return (
-    <div style={{ display: "flex", justifyContent: "center", paddingBottom: 40 * s }}>
+    <div style={{ display: "flex", justifyContent: "center" }}>
       {item(win, "WIN")}{item("#3d3d44", "LOSS")}{item("#5a1a22", "DRAW")}{item("#2a2a30", "UPCOMING", true)}
     </div>
   );
-}
-
-// 시즌 그리드 하단 안전 여백
-function BottomGap({ height }: { height: number }) {
-  return <div style={{ display: "flex", height: height * 0.03 }} />;
 }
 
 function GridSeason(props: RenderProps, shape: "square" | "soft" | "circle") {
@@ -44,13 +39,12 @@ function GridSeason(props: RenderProps, shape: "square" | "soft" | "circle") {
   const radius = shape === "circle" ? dot : shape === "soft" ? dot * 0.28 : 2;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0a0a0c", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#fff" }}>
-      <div style={{ height: height * 0.09 }} />
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#0a0a0c", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#fff" }}>
       <div style={{ display: "flex", fontSize: 84 * s, fontWeight: 800, letterSpacing: 1 }}>{team.en}</div>
       <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.45)", marginTop: 4 * s, marginBottom: 22 * s }}>
         {team.name.split(" ").pop()?.toUpperCase()} · {props.year} SEASON
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", width: innerW, flex: 1, alignContent: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", width: innerW, alignContent: "flex-start", marginBottom: 30 * s }}>
         {games.map((sg, i) => {
           const { fill, border } = outcomeColor(sg.outcome, win);
           return (
@@ -61,7 +55,6 @@ function GridSeason(props: RenderProps, shape: "square" | "soft" | "circle") {
         })}
       </div>
       <Legend s={s} win={win} />
-      <BottomGap height={height} />
     </div>
   );
 }

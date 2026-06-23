@@ -143,10 +143,10 @@ export function Newspaper(props: RenderProps) {
   const rule = light ? "rgba(26,24,19,0.35)" : "rgba(239,236,228,0.3)";
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 54 * s;
+  const rowH = ((width - pad * 2) / 7) * 1.25;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: bg, fontFamily: "Pretendard", padding: `0 ${pad}px`, color: fg }}>
-      <div style={{ height: height * 0.10 }} />
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: bg, fontFamily: "Pretendard", padding: `0 ${pad}px`, color: fg }}>
       <div style={{ display: "flex", height: 3 * s, background: fg }} />
       <div style={{ display: "flex", justifyContent: "center", fontSize: 52 * s, fontWeight: 800, letterSpacing: 1, padding: `${10 * s}px 0` }}>THE DAILY DIAMOND</div>
       <div style={{ display: "flex", height: 2 * s, background: fg, marginBottom: 6 * s }} />
@@ -158,9 +158,9 @@ export function Newspaper(props: RenderProps) {
           <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", fontSize: 14 * s, letterSpacing: 1, color: sub }}>{w}</div>
         ))}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: 30 * s }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flex: 1, borderTop: `1px solid ${rule}` }}>
+          <div key={wi} style={{ display: "flex", height: rowH, borderTop: `1px solid ${rule}` }}>
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const g = cell.game && cell.inMonth;
@@ -181,7 +181,6 @@ export function Newspaper(props: RenderProps) {
           </div>
         ))}
       </div>
-      <div style={{ height: height * 0.05 }} />
     </div>
   );
 }
@@ -192,12 +191,12 @@ export function Brutal(props: RenderProps) {
   const s = width / 1170;
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 44 * s;
+  const rowH = ((width - pad * 2) / 7) * 1.25; // 셀 높이 고정 → 블록 전체를 세로 중앙 배치
   const homeN = games.filter((g) => g.home?.id === team.id).length;
   const awayN = games.length - homeN;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0d0d0d", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#f2efe6" }}>
-      <div style={{ height: height * 0.09 }} />
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#0d0d0d", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#f2efe6" }}>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 * s }}>
         <div style={{ display: "flex", background: "#f2efe6", color: "#0d0d0d", fontSize: 30 * s, fontWeight: 800, padding: `${8 * s}px ${18 * s}px`, letterSpacing: 1 }}>
           {EN_MONTH_SHORT[month - 1]} '{String(year).slice(2)}
@@ -216,9 +215,9 @@ export function Brutal(props: RenderProps) {
           <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", alignItems: "center", height: 34 * s, fontSize: 20 * s, fontWeight: 700, background: i === 0 ? team.primary : "#1a1a1a", color: "#fff" }}>{w}</div>
         ))}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: 28 * s }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flex: 1 }}>
+          <div key={wi} style={{ display: "flex", height: rowH }}>
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const c = cell.opponent ? chipColor(cell.opponent.id) : "#fff";
@@ -246,7 +245,6 @@ export function Brutal(props: RenderProps) {
           </div>
         ))}
       </div>
-      <div style={{ height: height * 0.06 }} />
     </div>
   );
 }
@@ -257,11 +255,11 @@ export function Nighter(props: RenderProps) {
   const s = width / 1170;
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 44 * s;
+  const rowH = ((width - pad * 2) / 7) * 1.2;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0f2237", fontFamily: "Pretendard", padding: `0 ${pad}px`, position: "relative", color: "#fff" }}>
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#0f2237", fontFamily: "Pretendard", padding: `0 ${pad}px`, position: "relative", color: "#fff" }}>
       <img src={floodlightBg(width, height)} width={width} height={height} style={{ position: "absolute", top: 0, left: 0 }} />
-      <div style={{ height: height * 0.09 }} />
       <div style={{ display: "flex", flexDirection: "column", position: "relative" }}>
         <div style={{ display: "flex", fontSize: 58 * s, fontWeight: 800 }}>{team.name}</div>
         <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.5)", marginTop: 8 * s }}>
@@ -274,9 +272,9 @@ export function Nighter(props: RenderProps) {
           <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", fontSize: 22 * s, fontWeight: 600, color: weekdayColor(i, "rgba(255,255,255,0.6)") }}>{w}</div>
         ))}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, position: "relative", paddingTop: 8 * s, paddingBottom: 24 * s }}>
+      <div style={{ display: "flex", flexDirection: "column", position: "relative", paddingTop: 8 * s }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flex: 1 }}>
+          <div key={wi} style={{ display: "flex", height: rowH }}>
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const c = cell.opponent ? chipColor(cell.opponent.id) : "#fff";
@@ -301,7 +299,7 @@ export function Nighter(props: RenderProps) {
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", fontSize: 16 * s, letterSpacing: 3, color: "rgba(255,255,255,0.4)", paddingBottom: height * 0.05 }}>FIRST PITCH 18:30 KST</div>
+      <div style={{ display: "flex", fontSize: 16 * s, letterSpacing: 3, color: "rgba(255,255,255,0.4)", position: "relative", paddingTop: 18 * s }}>FIRST PITCH 18:30 KST</div>
     </div>
   );
 }
@@ -322,10 +320,10 @@ export function Led(props: RenderProps) {
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 50 * s;
   const amber = "#FFB02E";
+  const rowH = ((width - pad * 2) / 7) * 1.2;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: "#070707", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: amber }}>
-      <div style={{ height: height * 0.09 }} />
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#070707", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: amber }}>
       <div style={{ display: "flex", fontSize: 74 * s, fontWeight: 800, letterSpacing: 4 }}>{team.en} {team.nickname}</div>
       <div style={{ display: "flex", fontSize: 30 * s, fontWeight: 700, letterSpacing: 3, marginTop: 6 * s }}>{EN_MONTH_SHORT[month - 1]} {year}</div>
       <div style={{ display: "flex", fontSize: 18 * s, letterSpacing: 4, color: "rgba(255,176,46,0.55)", marginTop: 4 * s, marginBottom: 18 * s }}>KBO REGULAR SEASON</div>
@@ -334,9 +332,9 @@ export function Led(props: RenderProps) {
           <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", fontSize: 17 * s, fontWeight: 700, letterSpacing: 1, color: i === 0 ? "#ff5a3c" : i === 6 ? "#ffd27a" : amber, marginBottom: 8 * s }}>{w}</div>
         ))}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: 24 * s }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", flex: 1 }}>
+          <div key={wi} style={{ display: "flex", height: rowH }}>
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const wl = cell.outcome === "win" ? "W" : cell.outcome === "lose" ? "L" : "";
@@ -352,7 +350,6 @@ export function Led(props: RenderProps) {
           </div>
         ))}
       </div>
-      <div style={{ height: height * 0.06 }} />
     </div>
   );
 }

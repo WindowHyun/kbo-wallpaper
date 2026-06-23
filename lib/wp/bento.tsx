@@ -35,9 +35,11 @@ export function Bento(props: RenderProps) {
     display: "flex", flexDirection: "column", background: CARD, borderRadius: 22 * s, padding: 26 * s, ...extra,
   });
 
+  // 미니 캘린더 카드 높이를 고정 → 전체 스택을 세로 중앙 배치
+  const calCardH = (width - pad * 2) * 0.92;
+
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: PAGE, fontFamily: "Pretendard", padding: `0 ${pad}px`, color: FG }}>
-      <div style={{ height: height * 0.09 }} />
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: PAGE, fontFamily: "Pretendard", padding: `0 ${pad}px`, color: FG }}>
 
       {/* 팀 + 전적 */}
       <div style={{ display: "flex", gap: 16 * s, marginBottom: 16 * s }}>
@@ -96,7 +98,7 @@ export function Bento(props: RenderProps) {
       </div>
 
       {/* 미니 캘린더 */}
-      <div style={cardStyle({ flex: 1, marginBottom: 16 * s })}>
+      <div style={cardStyle({ height: calCardH, marginBottom: 16 * s })}>
         <div style={{ display: "flex", marginBottom: 6 * s }}>
           {WEEK_KO.map((w, i) => (
             <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", fontSize: 14 * s, color: i === 0 ? "#ff6b6b" : i === 6 ? "#7fb0ff" : LABEL }}>{w}</div>
@@ -125,7 +127,7 @@ export function Bento(props: RenderProps) {
       </div>
 
       {/* 진행바 */}
-      <div style={cardStyle({ marginBottom: height * 0.05 })}>
+      <div style={cardStyle()}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 * s }}>
           <div style={{ display: "flex", fontSize: 18 * s, fontWeight: 700, letterSpacing: 1 }}>{EN_MONTH_SHORT[month - 1]} {year}</div>
           <Label s={s} color={LABEL}>DAY {todayDay} OF {daysInMonth}</Label>
