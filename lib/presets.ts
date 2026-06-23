@@ -23,6 +23,7 @@ export function resolutionById(id: string | null | undefined): Resolution {
 
 export type StyleId =
   | "minimal"
+  | "cute"
   | "sketch"
   | "newspaper"
   | "bento"
@@ -47,6 +48,7 @@ export interface Style {
 
 export const STYLES: Style[] = [
   { id: "minimal", label: "MINIMAL", group: "calendar" },
+  { id: "cute", label: "CUTE · 아기자기", group: "calendar" },
   { id: "mascot", label: "MASCOT · 픽토", group: "calendar" },
   { id: "sketch", label: "SKETCH · 손그림", group: "calendar" },
   { id: "newspaper", label: "NEWSPAPER · 신문", group: "calendar" },

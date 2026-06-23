@@ -3,6 +3,7 @@ import React from "react";
 import { StyleId } from "../presets";
 import { RenderProps } from "./common";
 import { Minimal, Mascot, Sketch, Newspaper, Brutal, Nighter, Led } from "./calendar";
+import { Cute } from "./cute";
 import { Bento } from "./bento";
 import { Kpop } from "./kpop";
 import { List } from "./list";
@@ -10,6 +11,7 @@ import { Grass, GrassSoft, Dots, Diamond } from "./season";
 
 const RENDERERS: Record<StyleId, (p: RenderProps) => React.ReactElement> = {
   minimal: Minimal,
+  cute: Cute,
   mascot: Mascot,
   sketch: Sketch,
   newspaper: Newspaper,
