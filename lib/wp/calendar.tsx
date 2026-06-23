@@ -324,7 +324,7 @@ export function Led(props: RenderProps) {
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: "#070707", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: amber }}>
       <div style={{ height: height * 0.22 - 15 }} />
-      <div style={{ display: "flex", fontSize: 74 * s, fontWeight: 800, letterSpacing: 4 }}>{team.en} TIGERS</div>
+      <div style={{ display: "flex", fontSize: 74 * s, fontWeight: 800, letterSpacing: 4 }}>{team.en} {team.nickname}</div>
       <div style={{ display: "flex", fontSize: 30 * s, fontWeight: 700, letterSpacing: 3, marginTop: 6 * s }}>{EN_MONTH_SHORT[month - 1]} {year}</div>
       <div style={{ display: "flex", fontSize: 18 * s, letterSpacing: 4, color: "rgba(255,176,46,0.55)", marginTop: 4 * s, marginBottom: 18 * s }}>KBO REGULAR SEASON</div>
       <div style={{ display: "flex" }}>
