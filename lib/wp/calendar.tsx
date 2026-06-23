@@ -181,6 +181,7 @@ export function Newspaper(props: RenderProps) {
           </div>
         ))}
       </div>
+      <div style={{ height: height * 0.05 }} />
     </div>
   );
 }
@@ -196,7 +197,7 @@ export function Brutal(props: RenderProps) {
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0d0d0d", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#f2efe6" }}>
-      <div style={{ height: height * 0.22 - 15 }} />
+      <div style={{ height: height * 0.09 }} />
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 * s }}>
         <div style={{ display: "flex", background: "#f2efe6", color: "#0d0d0d", fontSize: 30 * s, fontWeight: 800, padding: `${8 * s}px ${18 * s}px`, letterSpacing: 1 }}>
           {EN_MONTH_SHORT[month - 1]} '{String(year).slice(2)}
@@ -245,6 +246,7 @@ export function Brutal(props: RenderProps) {
           </div>
         ))}
       </div>
+      <div style={{ height: height * 0.06 }} />
     </div>
   );
 }
@@ -259,7 +261,7 @@ export function Nighter(props: RenderProps) {
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0f2237", fontFamily: "Pretendard", padding: `0 ${pad}px`, position: "relative", color: "#fff" }}>
       <img src={floodlightBg(width, height)} width={width} height={height} style={{ position: "absolute", top: 0, left: 0 }} />
-      <div style={{ height: height * 0.24 - 15 }} />
+      <div style={{ height: height * 0.09 }} />
       <div style={{ display: "flex", flexDirection: "column", position: "relative" }}>
         <div style={{ display: "flex", fontSize: 58 * s, fontWeight: 800 }}>{team.name}</div>
         <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.5)", marginTop: 8 * s }}>
@@ -299,7 +301,7 @@ export function Nighter(props: RenderProps) {
           </div>
         ))}
       </div>
-      <div style={{ display: "flex", fontSize: 16 * s, letterSpacing: 3, color: "rgba(255,255,255,0.4)", paddingBottom: 30 * s }}>FIRST PITCH 18:30 KST</div>
+      <div style={{ display: "flex", fontSize: 16 * s, letterSpacing: 3, color: "rgba(255,255,255,0.4)", paddingBottom: height * 0.05 }}>FIRST PITCH 18:30 KST</div>
     </div>
   );
 }
@@ -323,7 +325,7 @@ export function Led(props: RenderProps) {
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: "#070707", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: amber }}>
-      <div style={{ height: height * 0.22 - 15 }} />
+      <div style={{ height: height * 0.09 }} />
       <div style={{ display: "flex", fontSize: 74 * s, fontWeight: 800, letterSpacing: 4 }}>{team.en} {team.nickname}</div>
       <div style={{ display: "flex", fontSize: 30 * s, fontWeight: 700, letterSpacing: 3, marginTop: 6 * s }}>{EN_MONTH_SHORT[month - 1]} {year}</div>
       <div style={{ display: "flex", fontSize: 18 * s, letterSpacing: 4, color: "rgba(255,176,46,0.55)", marginTop: 4 * s, marginBottom: 18 * s }}>KBO REGULAR SEASON</div>
@@ -350,6 +352,7 @@ export function Led(props: RenderProps) {
           </div>
         ))}
       </div>
+      <div style={{ height: height * 0.06 }} />
     </div>
   );
 }

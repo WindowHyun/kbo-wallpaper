@@ -12,7 +12,7 @@ export function List(props: RenderProps) {
 
   const sorted = [...games].sort((a, b) => a.date.localeCompare(b.date));
   const n = Math.max(sorted.length, 1);
-  const topSpace = Math.round(height * 0.13);
+  const topSpace = Math.round(height * 0.08);
   const headerH = Math.round(230 * s);
   const footerH = Math.round(120 * s);
   const listH = height - topSpace - headerH - footerH;

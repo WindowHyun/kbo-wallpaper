@@ -25,6 +25,10 @@ export function Cute(props: RenderProps) {
   const loseBg = "#36161b", loseBd = "rgba(255,138,150,0.30)";
   const restBd = "rgba(243,239,232,0.14)";
 
+  // 셀이 폰처럼 길쭉해지지 않도록 가로 대비 적정 높이로 제한
+  const cellW = (width - pad * 2) / 7;
+  const cellH = cellW * 1.35;
+
   return (
     <div
       style={{
@@ -64,7 +68,7 @@ export function Cute(props: RenderProps) {
       {/* 달력 — 셀이 어두운 배경 위에 바로 떠 있음 */}
       <div style={{ display: "flex", flexDirection: "column" }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex" }}>
+          <div key={wi} style={{ display: "flex", height: cellH }}>
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const g = cell.game && cell.inMonth;
@@ -81,7 +85,7 @@ export function Cute(props: RenderProps) {
                   <div
                     style={{
                       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                      position: "relative", width: "100%", height: 118 * s, gap: 3 * s,
+                      position: "relative", width: "100%", height: "100%", gap: 3 * s,
                       borderRadius: rad, background: fillBg,
                       border: `${1.6 * s}px solid ${today ? "#ff5a5a" : bd}`,
                     }}
@@ -104,7 +108,7 @@ export function Cute(props: RenderProps) {
       </div>
 
       {/* 하단 출처 */}
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 22 * s, fontSize: 16 * s, letterSpacing: 4, color: "rgba(243,239,232,0.3)" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 18 * s, fontSize: 16 * s, letterSpacing: 4, color: "rgba(243,239,232,0.3)" }}>
         data : kbo
       </div>
     </div>

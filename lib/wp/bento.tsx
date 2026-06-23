@@ -37,7 +37,7 @@ export function Bento(props: RenderProps) {
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: PAGE, fontFamily: "Pretendard", padding: `0 ${pad}px`, color: FG }}>
-      <div style={{ height: height * 0.24 - 15 }} />
+      <div style={{ height: height * 0.09 }} />
 
       {/* 팀 + 전적 */}
       <div style={{ display: "flex", gap: 16 * s, marginBottom: 16 * s }}>
@@ -125,7 +125,7 @@ export function Bento(props: RenderProps) {
       </div>
 
       {/* 진행바 */}
-      <div style={cardStyle({ marginBottom: 36 * s })}>
+      <div style={cardStyle({ marginBottom: height * 0.05 })}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 * s }}>
           <div style={{ display: "flex", fontSize: 18 * s, fontWeight: 700, letterSpacing: 1 }}>{EN_MONTH_SHORT[month - 1]} {year}</div>
           <Label s={s} color={LABEL}>DAY {todayDay} OF {daysInMonth}</Label>
