@@ -20,7 +20,7 @@ function Legend({ s, win }: { s: number; win: string }) {
     </div>
   );
   return (
-    <div style={{ display: "flex", justifyContent: "center", paddingBottom: 40 * s }}>
+    <div style={{ display: "flex", justifyContent: "center" }}>
       {item(win, "WIN")}{item("#3d3d44", "LOSS")}{item("#5a1a22", "DRAW")}{item("#2a2a30", "UPCOMING", true)}
     </div>
   );
@@ -39,13 +39,12 @@ function GridSeason(props: RenderProps, shape: "square" | "soft" | "circle") {
   const radius = shape === "circle" ? dot : shape === "soft" ? dot * 0.28 : 2;
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0a0a0c", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#fff" }}>
-      <div style={{ height: height * 0.24 - 15 }} />
+    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#0a0a0c", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#fff" }}>
       <div style={{ display: "flex", fontSize: 84 * s, fontWeight: 800, letterSpacing: 1 }}>{team.en}</div>
       <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.45)", marginTop: 4 * s, marginBottom: 22 * s }}>
         {team.name.split(" ").pop()?.toUpperCase()} · {props.year} SEASON
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", width: innerW, flex: 1, alignContent: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", width: innerW, alignContent: "flex-start", marginBottom: 30 * s }}>
         {games.map((sg, i) => {
           const { fill, border } = outcomeColor(sg.outcome, win);
           return (
@@ -74,7 +73,7 @@ export function Diamond(props: RenderProps) {
   const games = season?.games ?? [];
 
   const cx = width / 2;
-  const cy = height * 0.64;
+  const cy = height * 0.58;
   const R = width * 0.36;
   const corners = [
     { x: cx, y: cy + R, label: "HP" },     // 0 home plate (bottom)
@@ -102,7 +101,7 @@ export function Diamond(props: RenderProps) {
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: "#0a0a0c", fontFamily: "Pretendard", color: "#fff", position: "relative" }}>
-      <div style={{ display: "flex", flexDirection: "column", position: "absolute", left: 70 * s, top: height * 0.30 }}>
+      <div style={{ display: "flex", flexDirection: "column", position: "absolute", left: 70 * s, top: height * 0.13 }}>
         <div style={{ display: "flex", fontSize: 84 * s, fontWeight: 800 }}>{team.en}</div>
         <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.45)", marginTop: 4 * s }}>
           {team.name.split(" ").pop()?.toUpperCase()} · {year} SEASON
@@ -112,7 +111,7 @@ export function Diamond(props: RenderProps) {
           <div style={{ display: "flex", fontSize: 34 * s, fontWeight: 800, letterSpacing: 2 }}>{rec.w}-{rec.l}-{rec.d}</div>
         </div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", position: "absolute", right: 70 * s, top: height * 0.33 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", position: "absolute", right: 70 * s, top: height * 0.16 }}>
         <div style={{ display: "flex", fontSize: 15 * s, letterSpacing: 3, color: "rgba(255,255,255,0.4)" }}>PCT</div>
         <div style={{ display: "flex", fontSize: 56 * s, fontWeight: 800, color: win }}>{pctStr}</div>
       </div>

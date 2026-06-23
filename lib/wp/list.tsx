@@ -12,13 +12,12 @@ export function List(props: RenderProps) {
 
   const sorted = [...games].sort((a, b) => a.date.localeCompare(b.date));
   const n = Math.max(sorted.length, 1);
-  const topSpace = Math.round(height * 0.13);
+  const topSpace = Math.round(height * 0.08);
   const headerH = Math.round(230 * s);
   const footerH = Math.round(120 * s);
   const listH = height - topSpace - headerH - footerH;
   const rowUnit = listH / n;
   const rowFont = Math.max(Math.round(22 * s), Math.min(Math.round(rowUnit * 0.5), Math.round(38 * s)));
-  const vpad = Math.max(2, Math.round((rowUnit - rowFont) / 2) - 1);
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column", background: `linear-gradient(160deg, ${p.bgFrom} 0%, ${p.bgTo} 100%)`, color: p.fg, fontFamily: "Pretendard", padding: `0 ${pad}px` }}>
@@ -43,7 +42,7 @@ export function List(props: RenderProps) {
           const rc = outcome === "win" ? p.win : outcome === "lose" ? p.lose : outcome === "draw" ? p.draw : p.sub;
           const c = opp ? chipColor(opp.id) : p.accent;
           return (
-            <div key={i} style={{ display: "flex", alignItems: "center", paddingTop: vpad, paddingBottom: vpad, opacity: outcome === "canceled" ? 0.4 : 1, borderBottom: `1px solid ${p.line}` }}>
+            <div key={i} style={{ display: "flex", flex: 1, alignItems: "center", opacity: outcome === "canceled" ? 0.4 : 1, borderBottom: `1px solid ${p.line}` }}>
               <div style={{ display: "flex", alignItems: "baseline", width: 150 * s }}>
                 <div style={{ display: "flex", fontSize: rowFont * 0.92, fontWeight: 700 }}>{String(g.month).padStart(2, "0")}.{String(g.day).padStart(2, "0")}</div>
                 <div style={{ display: "flex", fontSize: rowFont * 0.52, color: p.sub, marginLeft: 8 * s }}>{g.weekday}</div>
