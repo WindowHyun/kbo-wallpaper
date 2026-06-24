@@ -74,60 +74,145 @@ function MinimalBase(props: RenderProps, withMascot: boolean) {
 export const Minimal = (p: RenderProps) => MinimalBase(p, false);
 export const Mascot = (p: RenderProps) => MinimalBase(p, true);
 
-/* ── SKETCH (손그림) ──────────────────────────────────────────── */
+/* ── SKETCH (손그림) ──────────────────────────────────────────────
+   CSS 보더(반듯한 도형) 대신 SVG 펜선으로 삐뚤빼뚤하게 그린 진짜 손그림.
+   밝게=노트 종이 / 어둡게=잉크. 손글씨 글꼴(Nanum Pen Script) 사용. */
+
+// 시드 난수 (결정적 — resume/재렌더 시 동일)
+function sketchRng(a: number) {
+  return function () {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+// 손그림 둥근 사각형 path (모서리·변에 미세 지터)
+function roughRectPath(x: number, y: number, w: number, h: number, seed: number): string {
+  const rnd = sketchRng(seed);
+  const jit = Math.min(w, h) * 0.035;
+  const j = () => (rnd() * 2 - 1) * jit;
+  const r = Math.min(w, h) * 0.18;
+  const x0 = x, y0 = y, x1 = x + w, y1 = y + h;
+  const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  return (
+    `M ${x0 + r + j()} ${y0 + j()} ` +
+    `Q ${mx + j()} ${y0 + j()} ${x1 - r + j()} ${y0 + j()} ` +
+    `Q ${x1 + j()} ${y0 + j()} ${x1 + j()} ${y0 + r + j()} ` +
+    `Q ${x1 + j()} ${my + j()} ${x1 + j()} ${y1 - r + j()} ` +
+    `Q ${x1 + j()} ${y1 + j()} ${x1 - r + j()} ${y1 + j()} ` +
+    `Q ${mx + j()} ${y1 + j()} ${x0 + r + j()} ${y1 + j()} ` +
+    `Q ${x0 + j()} ${y1 + j()} ${x0 + j()} ${y1 - r + j()} ` +
+    `Q ${x0 + j()} ${my + j()} ${x0 + j()} ${y0 + r + j()} ` +
+    `Q ${x0 + j()} ${y0 + j()} ${x0 + r + j()} ${y0 + j()} Z`
+  );
+}
+// 손그림 동그라미 (한 바퀴 살짝 넘겨 그리는 느낌)
+function roughCirclePath(cx: number, cy: number, rx: number, ry: number, seed: number): string {
+  const rnd = sketchRng(seed);
+  const j = () => (rnd() * 2 - 1) * Math.min(rx, ry) * 0.08;
+  const pts: string[] = [];
+  const n = 10;
+  for (let i = 0; i <= n + 2; i++) {
+    const a = -0.3 + (i / n) * Math.PI * 2;
+    pts.push(`${i === 0 ? "M" : "L"} ${(cx + Math.cos(a) * (rx + j())).toFixed(1)} ${(cy + Math.sin(a) * (ry + j())).toFixed(1)}`);
+  }
+  return pts.join(" ");
+}
+
 export function Sketch(props: RenderProps) {
-  const { team, year, month, games, todayISO, mode, width, height } = props;
-  const s = width / 1170;
+  const { team, year, month, games, todayISO, mode, width: W, height: H } = props;
+  const s = W / 1170;
   const light = mode === "light";
-  const bg = light ? "#f3f1ea" : "#0c0c0e";
-  const fg = light ? "#1d1b16" : "#f2efe6";
-  const sub = light ? "rgba(29,27,22,0.5)" : "rgba(242,239,230,0.5)";
-  const ink = light ? "rgba(29,27,22,0.55)" : "rgba(242,239,230,0.5)";
-  const weeks = buildMatrix(year, month, games, team.id);
-  const pad = 56 * s;
   const accent = team.primary === "#000000" ? "#EB1C24" : team.primary;
-  const greenInk = light ? "#1f7a44" : "#7CFFB2";
-  const rowH = ((width - pad * 2) / 7) * 1.2;
+  const ink = light ? "#2b2a26" : "#f3efe6";
+  const sub = light ? "rgba(43,42,38,0.5)" : "rgba(243,239,230,0.5)";
+  const faint = light ? "rgba(43,42,38,0.22)" : "rgba(243,239,230,0.18)";
+  const winC = light ? "#1f7a44" : "#7CFFB2";
+  const loseC = light ? "#cf5a5a" : "#ff8f9a";
+  const weeks = buildMatrix(year, month, games, team.id);
+
+  const pad = 60 * s;
+  const gridX = pad, gridW = W - pad * 2, cellW = gridW / 7;
+  const rows = weeks.length;
+  const rowH = cellW * 1.18;
+  const gridH = rows * rowH;
+  const headerH = 150 * s, weekdayH = 50 * s;
+  const block = headerH + 14 * s + weekdayH + gridH;
+  const top = (H - block) / 2;
+  const weekdayTop = top + headerH + 14 * s;
+  const gridY = weekdayTop + weekdayH;
+  const sw = 2.4 * s, inset = 9 * s;
+
+  // 배경
+  const bgInner = light
+    ? (() => {
+        const lines: string[] = [];
+        for (let y = 0; y < H; y += 70) lines.push(`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(90,120,170,0.08)" stroke-width="1"/>`);
+        return `<rect width="${W}" height="${H}" fill="#fbf6ea"/>${lines.join("")}`;
+      })()
+    : `<rect width="${W}" height="${H}" fill="#0c0c0e"/>`;
+
+  // 셀 외곽선 / 채움 / 오늘 동그라미 (SVG 펜선)
+  const paths: string[] = [];
+  weeks.forEach((week, r) => {
+    week.forEach((cell, c) => {
+      const x = gridX + c * cellW + inset, y = gridY + r * rowH + inset;
+      const w = cellW - inset * 2, h = rowH - inset * 2;
+      const cx = gridX + c * cellW + cellW / 2, cy = gridY + r * rowH + rowH / 2;
+      const seed = (cell.day + 1) * (c + 3) * (r + 5) + month * 17;
+      const g = cell.game && cell.inMonth;
+      const today = isToday(cell, todayISO, year, month);
+      if (g) {
+        const win = cell.outcome === "win", lose = cell.outcome === "lose";
+        const oppC = cell.opponent ? chipColor(cell.opponent.id) : ink;
+        const stroke = win ? winC : lose ? loseC : oppC;
+        const d = roughRectPath(x, y, w, h, seed);
+        if (win || lose) paths.push(`<path d="${d}" fill="${stroke}" fill-opacity="0.15" stroke="none"/>`);
+        paths.push(`<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>`);
+        paths.push(`<path d="${roughRectPath(x, y, w, h, seed + 7)}" fill="none" stroke="${stroke}" stroke-width="${sw * 0.7}" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>`);
+      } else if (cell.inMonth) {
+        paths.push(`<path d="${roughRectPath(x, y, w, h, seed)}" fill="none" stroke="${faint}" stroke-width="${sw * 0.8}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${6 * s} ${7 * s}"/>`);
+      }
+      if (today) paths.push(`<path d="${roughCirclePath(cx, cy, w * 0.62, h * 0.6, seed + 99)}" fill="none" stroke="#e23b3b" stroke-width="${sw * 1.15}" stroke-linecap="round"/>`);
+    });
+  });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">${bgInner}${paths.join("")}</svg>`;
+  const bgUri = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+
+  // 손글씨 텍스트 오버레이 (셀마다 절대배치)
+  const nodes: React.ReactNode[] = [];
+  weeks.forEach((week, r) => {
+    week.forEach((cell, c) => {
+      const left = gridX + c * cellW, t2 = gridY + r * rowH;
+      const g = cell.game && cell.inMonth;
+      const today = isToday(cell, todayISO, year, month);
+      const win = cell.outcome === "win", lose = cell.outcome === "lose";
+      const numColor = today ? "#e23b3b" : !cell.inMonth ? faint : ink;
+      const lblColor = win ? winC : lose ? loseC : cell.opponent ? chipColor(cell.opponent.id) : sub;
+      nodes.push(
+        <div key={`${r}-${c}`} style={{ position: "absolute", left, top: t2, width: cellW, height: rowH, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ display: "flex", height: 20 * s, fontSize: 18 * s, color: g ? lblColor : "transparent" }}>{g ? `${cell.isHome ? "vs" : "@"}${cell.opponent?.short ?? ""}` : ""}</div>
+          <div style={{ display: "flex", fontSize: 36 * s, color: numColor }}>{cell.day}</div>
+        </div>
+      );
+    });
+  });
 
   return (
-    <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: bg, fontFamily: "Pretendard", padding: `0 ${pad}px`, color: fg }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ display: "flex", fontSize: 50 * s, fontWeight: 700 }}>{team.name}</div>
-        <div style={{ display: "flex", width: 10 * s, height: 10 * s, borderRadius: 6, background: accent, marginLeft: 10 * s }} />
+    <div style={{ width: W, height: H, display: "flex", position: "relative", fontFamily: "Nanum Pen Script, Pretendard", color: ink }}>
+      <img src={bgUri} width={W} height={H} style={{ position: "absolute", top: 0, left: 0 }} />
+      <div style={{ position: "absolute", left: pad, top, width: gridW, display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", fontSize: 76 * s }}>{team.name}</div>
+          <div style={{ display: "flex", width: 14 * s, height: 14 * s, borderRadius: 999, background: accent, marginLeft: 12 * s }} />
+        </div>
+        <div style={{ display: "flex", fontSize: 34 * s, color: sub, marginTop: 2 * s }}>{year}. {String(month).padStart(2, "0")}</div>
       </div>
-      <div style={{ display: "flex", justifyContent: "center", fontSize: 24 * s, letterSpacing: 6, color: sub, marginTop: 8 * s }}>{year} · {String(month).padStart(2, "0")}</div>
-      <div style={{ display: "flex", marginTop: 26 * s }}>
-        {WEEK_KO.map((w, i) => (
-          <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", fontSize: 20 * s, color: weekdayColor(i, sub) }}>{w}</div>
-        ))}
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", paddingTop: 8 * s }}>
-        {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: "flex", height: rowH }}>
-            {week.map((cell, di) => {
-              const today = isToday(cell, todayISO, year, month);
-              const g = cell.game && cell.inMonth;
-              const win = cell.outcome === "win";
-              const lose = cell.outcome === "lose";
-              // 손그림: 살짝 회전한 둥근 테두리 셀
-              const rot = ((cell.day * 7) % 5) - 2;
-              const bdc = win ? greenInk : lose ? "#e06b6b" : ink;
-              return (
-                <div key={di} style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", margin: 4 * s }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3 * s, width: "100%", height: "100%", borderRadius: `${16 * s}px ${20 * s}px ${15 * s}px ${22 * s}px`, border: g ? `${2 * s}px solid ${bdc}` : `${1.5 * s}px dashed ${ink}`, transform: `rotate(${rot}deg)`, opacity: !cell.inMonth ? 0.3 : 1 }}>
-                    {g && (
-                      <div style={{ display: "flex", fontSize: 12 * s, fontWeight: 700, color: cell.opponent ? chipColor(cell.opponent.id) : fg }}>
-                        {cell.isHome ? "vs" : "@"}{cell.opponent?.short}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", fontSize: 28 * s, fontWeight: 700, color: today ? "#e2042b" : fg, ...(today ? { textDecoration: "underline" } : {}) }}>{cell.day}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      {WEEK_KO.map((w, i) => (
+        <div key={i} style={{ position: "absolute", top: weekdayTop, left: gridX + i * cellW, width: cellW, height: weekdayH, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 27 * s, color: i === 0 ? "#d05a5a" : i === 6 ? "#5a7fd0" : sub }}>{w}</div>
+      ))}
+      {nodes}
     </div>
   );
 }
