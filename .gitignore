@@ -9,3 +9,4 @@ out
 .claude/
 next-env.d.ts
 *.png
+tsconfig.tsbuildinfo

@@ -17,9 +17,8 @@ export const RESOLUTIONS: Resolution[] = [
   { id: "android-qhd", label: "Android QHD (1440×3120)", width: 1440, height: 3120 },
 ];
 
-export function resolutionById(id: string | null | undefined): Resolution {
-  return RESOLUTIONS.find((r) => r.id === id) ?? RESOLUTIONS[2];
-}
+// res 파라미터 생략 시 기본 해상도 (iPhone 15 Pro)
+export const DEFAULT_RESOLUTION: Resolution = RESOLUTIONS[2];
 
 export type StyleId =
   | "minimal"

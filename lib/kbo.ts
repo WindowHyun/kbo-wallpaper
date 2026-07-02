@@ -11,7 +11,9 @@
 
 import { Team, teamByName } from "./teams";
 
-const ENDPOINT = "https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList";
+// KBO_ENDPOINT 환경변수로 오버라이드 가능 (로컬 개발·테스트에서 목 서버를 쓸 때)
+const ENDPOINT =
+  process.env.KBO_ENDPOINT ?? "https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList";
 
 export type GameStatus = "result" | "scheduled" | "canceled";
 

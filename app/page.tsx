@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { TEAMS } from "@/lib/teams";
 import { RESOLUTIONS, STYLES, supportsLight, isStyleId } from "@/lib/presets";
 
@@ -33,9 +33,20 @@ export default function Home() {
   // 미리보기는 실제 해상도를 쓰되 CSS로 축소
   const previewUrl = useMemo(() => path, [path]);
 
-  // origin 은 클라이언트에서만 알 수 있으므로 mount 후 채운다 (SSR 하이드레이션 불일치 방지)
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
+  // 옵션 변경으로 미리보기 URL이 바뀌면 로딩 표시를 다시 켠다
+  // (<img>의 loadstart 이벤트는 대부분의 브라우저에서 발화하지 않아 렌더 중 상태 보정으로 처리)
+  const [shownUrl, setShownUrl] = useState(previewUrl);
+  if (shownUrl !== previewUrl) {
+    setShownUrl(previewUrl);
+    setLoading(true);
+  }
+
+  // origin 은 클라이언트에서만 알 수 있다 (SSR 렌더에서는 빈 문자열 → 하이드레이션 불일치 방지)
+  const origin = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => ""
+  );
   const absoluteUrl = origin + autoPath;
 
   const yearOpts = [now.year, now.year - 1];
@@ -167,14 +178,14 @@ export default function Home() {
       <div className="section">
         <div className="label">미리보기</div>
         <div className="preview">
-          {/* key 로 src 변경 시 로딩 상태 리셋 */}
+          {/* API가 즉석 생성하는 PNG 라 next/image 최적화가 무의미 — 원본 <img> 사용 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={previewUrl}
             src={previewUrl}
             alt="미리보기"
             onLoad={() => setLoading(false)}
             onError={() => setLoading(false)}
-            onLoadStart={() => setLoading(true)}
           />
           {loading && <div className="spinner">불러오는 중…</div>}
         </div>

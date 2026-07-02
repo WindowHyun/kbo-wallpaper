@@ -9,8 +9,9 @@ KBO 구단별 한 달 경기 일정·결과를 모바일 잠금화면 배경화�
   `POST https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList`
   (body: `leId, srIdList, seasonId, gameMonth, teamId`)
 - HTML 셀로 내려오는 응답을 [lib/kbo.ts](lib/kbo.ts) 에서 구조화된 경기 데이터로 파싱합니다.
-- [lib/render.tsx](lib/render.tsx) + `next/og`(Satori) 로 PNG 월페이퍼를 서버에서 렌더링합니다.
-  한글은 Pretendard 글꼴([lib/fonts.ts](lib/fonts.ts))을 로드해 표시합니다.
+- [lib/wp](lib/wp) + `next/og`(Satori) 로 PNG 월페이퍼를 서버에서 렌더링합니다.
+  한글은 저장소에 번들된 Pretendard·나눔손글씨 펜 글꼴([assets/fonts](assets/fonts),
+  [lib/fonts.ts](lib/fonts.ts))로 표시합니다.
 - 미리보기 · 다운로드 · 자동 업데이트 URL이 **모두 같은 엔드포인트** `/api/wallpaper` 를 사용합니다.
 
 ### 자동 업데이트 URL
@@ -19,15 +20,20 @@ PNG 엔드포인트는 요청 시점에 일정을 가져와(6시간 CDN 캐시 +
 고정 URL 하나가 매일 최신 결과를 반영합니다. 별도 DB/크론 없이 reference 사이트와 같은 UX를 제공합니다.
 
 ```
-/api/wallpaper?team=OB&month=2026-06&style=team&res=iphone
+/api/wallpaper?team=OB&month=2026-06&style=minimal&res=iphone-15-pro
 ```
 
 | 파라미터 | 설명 | 값 |
 | --- | --- | --- |
-| `team` | 구단 코드 | `HT SS LG OB SK LT HH NC WO KT` |
-| `month` | 연-월 (또는 월) | `2026-06`, `6` |
-| `style` | 디자인 | `team` `dark` `light` `mono` |
-| `res` | 해상도 | `iphone-pro-max` `iphone` `iphone-mini` `android-qhd` `android-fhd` |
+| `team` | 구단 (필수) | 코드 `HT SS LG OB SK LT HH NC WO KT`, 영문 `DOOSAN KIA …`, 한글 `두산 …` |
+| `month` | 연-월 또는 월 (생략 시 KST 현재 달) | `2026-06`, `6` |
+| `year` | 연도 (생략 시 KST 현재 연도) | `2026` |
+| `style` | 디자인 (기본 `minimal`) | `minimal` `cute` `mascot` `sketch` `newspaper` `brutal` `nighter` `led-scoreboard` `kpop-card` `bento` `list` `grass` `grass-soft` `dots` `diamond` |
+| `mode` | 다크/라이트 (기본 `dark`) | `dark` `light` — light 지원: `minimal` `mascot` `sketch` `newspaper` `bento` |
+| `res` | 해상도 (기본 `iphone-15-pro`) | `iphone-17` `iphone-17-pro-max` `iphone-15-pro` `iphone-15-pro-max` `iphone-se` `android-fhd` `android-qhd` |
+
+파라미터를 생략하면 위 기본값을 쓰고, **잘못된 값을 주면 조용히 폴백하지 않고 400 오류**로
+알려줍니다 (오타로 의도와 다른 이미지가 나가는 것을 방지).
 
 - **iOS**: 단축어 → "URL 콘텐츠 가져오기"에 URL → "배경화면 설정". 자동화로 매일 실행.
 - **Android**: KWGT / 배경 자동변경 앱에 URL 등록.

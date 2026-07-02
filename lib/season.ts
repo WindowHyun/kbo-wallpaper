@@ -31,11 +31,23 @@ export function teamOutcome(g: Game, teamId: string): { isHome: boolean; outcome
   return { isHome, outcome: "scheduled" };
 }
 
+// 한 달치 조회. 일시적 오류에 대비해 1회 재시도하고, 그래도 실패하면 던진다.
+// 실패를 빈 배열로 삼키면 승·패·전적이 틀린 이미지가 캐시되므로 반드시 표면화한다.
+async function fetchMonth(year: number, month: number, teamId: string): Promise<Game[]> {
+  try {
+    return await getSchedule({ year, month, teamId });
+  } catch {
+    try {
+      return await getSchedule({ year, month, teamId });
+    } catch (e) {
+      throw new Error(`${month}월 일정 조회 실패 (${(e as Error).message})`);
+    }
+  }
+}
+
 export async function getSeason(year: number, teamId: string): Promise<SeasonData> {
   const monthResults = await Promise.all(
-    SEASON_MONTHS.map((m) =>
-      getSchedule({ year, month: m, teamId }).catch(() => [] as Game[])
-    )
+    SEASON_MONTHS.map((m) => fetchMonth(year, m, teamId))
   );
 
   const seen = new Set<string>();

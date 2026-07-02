@@ -284,7 +284,7 @@ export function Brutal(props: RenderProps) {
     <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#0d0d0d", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#f2efe6" }}>
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 * s }}>
         <div style={{ display: "flex", background: "#f2efe6", color: "#0d0d0d", fontSize: 30 * s, fontWeight: 800, padding: `${8 * s}px ${18 * s}px`, letterSpacing: 1 }}>
-          {EN_MONTH_SHORT[month - 1]} '{String(year).slice(2)}
+          {EN_MONTH_SHORT[month - 1]} {`'${String(year).slice(2)}`}
         </div>
       </div>
       <div style={{ display: "flex", fontSize: 150 * s, fontWeight: 800, lineHeight: 0.92, letterSpacing: -2 }}>{team.en}</div>
