@@ -24,12 +24,10 @@ function readFont(file: string): ArrayBuffer {
 
 export function loadFonts(): LoadedFont[] {
   if (!cache) {
-    const regular = readFont("Pretendard-Regular.otf");
-    const bold = readFont("Pretendard-Bold.otf");
     const fonts: LoadedFont[] = [
-      { name: "Pretendard", data: regular, weight: 400, style: "normal" },
-      { name: "Pretendard", data: bold, weight: 700, style: "normal" },
-      { name: "Pretendard", data: bold, weight: 800, style: "normal" },
+      { name: "Pretendard", data: readFont("Pretendard-Regular.otf"), weight: 400, style: "normal" },
+      { name: "Pretendard", data: readFont("Pretendard-Bold.otf"), weight: 700, style: "normal" },
+      { name: "Pretendard", data: readFont("Pretendard-ExtraBold.otf"), weight: 800, style: "normal" },
     ];
 
     // 손글씨 글꼴(CUTE·SKETCH용)은 베스트-에포트: 없으면 Pretendard 로 폴백한다.

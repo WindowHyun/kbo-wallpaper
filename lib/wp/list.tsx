@@ -39,7 +39,7 @@ export function List(props: RenderProps) {
             : (outcome === "win" || outcome === "lose" || outcome === "draw") && g.awayScore !== null && g.homeScore !== null
               ? `${isHome ? g.homeScore : g.awayScore} : ${isHome ? g.awayScore : g.homeScore}`
               : g.time || "-";
-          const rc = outcome === "win" ? p.win : outcome === "lose" ? p.lose : outcome === "draw" ? p.draw : p.sub;
+          const rc = outcome === "win" ? p.win : outcome === "lose" ? p.lose : outcome === "draw" ? p.draw : outcome === "canceled" ? p.cancel : p.sub;
           const c = opp ? chipColor(opp.id) : p.accent;
           return (
             <div key={i} style={{ display: "flex", flex: 1, alignItems: "center", opacity: outcome === "canceled" ? 0.4 : 1, borderBottom: `1px solid ${p.line}` }}>

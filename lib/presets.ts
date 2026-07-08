@@ -96,9 +96,10 @@ export interface Palette {
   win: string;
   lose: string;
   draw: string;
+  cancel: string;
 }
 
-// list 스타일용 팀 컬러 팔레트
+// list 스타일용 팀 컬러 팔레트 (승=초록 / 패=빨강 / 무=앰버 / 취소=회색)
 export function buildPalette(_style: StyleId, teamPrimary: string, teamSecondary: string): Palette {
   return {
     bgFrom: teamPrimary,
@@ -109,8 +110,9 @@ export function buildPalette(_style: StyleId, teamPrimary: string, teamSecondary
     card: "rgba(255,255,255,0.08)",
     accent: teamSecondary,
     win: "#7CFFB2",
-    lose: "rgba(255,255,255,0.45)",
-    draw: "rgba(255,255,255,0.7)",
+    lose: "#FFB3BC",
+    draw: "#FFD27A",
+    cancel: "rgba(255,255,255,0.55)",
   };
 }
 

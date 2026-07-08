@@ -2,14 +2,38 @@
 import React from "react";
 import {
   RenderProps, buildMatrix, DayCell, Chip, chipColor, ENGLISH_MONTHS, EN_MONTH_SHORT,
-  WEEK_KO, WEEK_EN, weekdayColor, calTheme,
+  WEEK_KO, WEEK_EN, weekdayColor, calTheme, CalTheme, DRAW_AMBER, CANCEL_GRAY, allCanceled,
 } from "./common";
+import { Outcome } from "../season";
 import { mascotDataUri } from "../mascots";
 
 function isToday(cell: DayCell, todayISO: string, year: number, month: number): boolean {
   if (!cell.inMonth) return false;
   const iso = `${year}-${String(month).padStart(2, "0")}-${String(cell.day).padStart(2, "0")}`;
   return iso === todayISO;
+}
+
+// 결과 → 셀 배경/테두리 (승·패·무·취소 각각 다른 색)
+function outcomeCellStyle(o: Outcome, t: CalTheme): { bg: string; bd: string } {
+  switch (o) {
+    case "win": return { bg: t.winBg, bd: t.winBd };
+    case "lose": return { bg: t.loseBg, bd: t.loseBd };
+    case "draw": return { bg: t.drawBg, bd: t.drawBd };
+    case "canceled": return { bg: t.cancelBg, bd: t.cancelBd };
+    default: return { bg: "transparent", bd: t.cellLine };
+  }
+}
+
+// 더블헤더(결과 2개)면 대각 분할 배경, 아니면 단색
+function cellFill(cell: DayCell, t: CalTheme): { bg: string; bd: string } {
+  const a = outcomeCellStyle(cell.outcomes[0] ?? "scheduled", t);
+  if (!cell.doubleheader) return a;
+  const b = outcomeCellStyle(cell.outcomes[1] ?? "scheduled", t);
+  if (a.bg === b.bg) return a;
+  return {
+    bg: `linear-gradient(135deg, ${a.bg} 0%, ${a.bg} 50%, ${b.bg} 50%, ${b.bg} 100%)`,
+    bd: t.cellLine,
+  };
 }
 
 /* ── MINIMAL / MASCOT ─────────────────────────────────────────── */
@@ -50,11 +74,14 @@ function MinimalBase(props: RenderProps, withMascot: boolean) {
               const today = isToday(cell, todayISO, year, month);
               let bg = "transparent", bd = "1px solid transparent";
               if (cell.game && cell.inMonth) {
-                if (cell.outcome === "win") { bg = t.winBg; bd = `1px solid ${t.winBd}`; }
-                else if (cell.outcome === "lose") { bg = t.loseBg; bd = `1px solid ${t.loseBd}`; }
-                else { bd = `1px solid ${t.cellLine}`; }
+                const f = cellFill(cell, t);
+                bg = f.bg;
+                bd = `1px solid ${f.bd}`;
               }
-              const dim = !cell.inMonth ? 0.4 : cell.outcome === "lose" ? 0.8 : 1;
+              const dim = !cell.inMonth ? 0.4
+                : allCanceled(cell) ? 0.7
+                : cell.outcomes.length > 0 && cell.outcomes.every((o) => o === "lose") ? 0.8
+                : 1;
               const numColor = today ? "#ff4d4d" : !cell.inMonth ? t.faint : t.fg;
               return (
                 <div key={di} style={{ display: "flex", flex: 1, margin: 3 * s }}>
@@ -130,6 +157,8 @@ export function Sketch(props: RenderProps) {
   const faint = light ? "rgba(43,42,38,0.22)" : "rgba(243,239,230,0.18)";
   const winC = light ? "#1f7a44" : "#7CFFB2";
   const loseC = light ? "#cf5a5a" : "#ff8f9a";
+  const drawC = light ? "#a87f1c" : "#ffd27a";
+  const cancelC = light ? "rgba(43,42,38,0.4)" : "rgba(243,239,230,0.4)";
   const weeks = buildMatrix(year, month, games, team.id);
 
   const pad = 60 * s;
@@ -164,13 +193,16 @@ export function Sketch(props: RenderProps) {
       const g = cell.game && cell.inMonth;
       const today = isToday(cell, todayISO, year, month);
       if (g) {
-        const win = cell.outcome === "win", lose = cell.outcome === "lose";
+        const o = cell.outcome;
+        const win = o === "win", lose = o === "lose", draw = o === "draw", canceled = o === "canceled";
         const oppC = cell.opponent ? chipColor(cell.opponent.id) : ink;
-        const stroke = win ? winC : lose ? loseC : oppC;
+        const stroke = win ? winC : lose ? loseC : draw ? drawC : canceled ? cancelC : oppC;
         const d = roughRectPath(x, y, w, h, seed);
-        if (win || lose) paths.push(`<path d="${d}" fill="${stroke}" fill-opacity="0.15" stroke="none"/>`);
-        paths.push(`<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>`);
-        paths.push(`<path d="${roughRectPath(x, y, w, h, seed + 7)}" fill="none" stroke="${stroke}" stroke-width="${sw * 0.7}" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>`);
+        if (win || lose || draw) paths.push(`<path d="${d}" fill="${stroke}" fill-opacity="0.15" stroke="none"/>`);
+        // 취소 경기는 점선 펜선으로 "지운" 느낌
+        const dash = canceled ? ` stroke-dasharray="${7 * s} ${8 * s}"` : "";
+        paths.push(`<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"${dash}/>`);
+        if (!canceled) paths.push(`<path d="${roughRectPath(x, y, w, h, seed + 7)}" fill="none" stroke="${stroke}" stroke-width="${sw * 0.7}" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>`);
       } else if (cell.inMonth) {
         paths.push(`<path d="${roughRectPath(x, y, w, h, seed)}" fill="none" stroke="${faint}" stroke-width="${sw * 0.8}" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${6 * s} ${7 * s}"/>`);
       }
@@ -187,12 +219,15 @@ export function Sketch(props: RenderProps) {
       const left = gridX + c * cellW, t2 = gridY + r * rowH;
       const g = cell.game && cell.inMonth;
       const today = isToday(cell, todayISO, year, month);
-      const win = cell.outcome === "win", lose = cell.outcome === "lose";
+      const o = cell.outcome;
+      const canceled = allCanceled(cell);
       const numColor = today ? "#e23b3b" : !cell.inMonth ? faint : ink;
-      const lblColor = win ? winC : lose ? loseC : cell.opponent ? chipColor(cell.opponent.id) : sub;
+      const lblColor = o === "win" ? winC : o === "lose" ? loseC : o === "draw" ? drawC : canceled ? cancelC : cell.opponent ? chipColor(cell.opponent.id) : sub;
       nodes.push(
         <div key={`${r}-${c}`} style={{ position: "absolute", left, top: t2, width: cellW, height: rowH, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ display: "flex", height: 20 * s, fontSize: 18 * s, color: g ? lblColor : "transparent" }}>{g ? `${cell.isHome ? "vs" : "@"}${cell.opponent?.short ?? ""}` : ""}</div>
+          <div style={{ display: "flex", height: 20 * s, fontSize: 18 * s, color: g ? lblColor : "transparent", ...(canceled ? { textDecoration: "line-through" } : {}) }}>
+            {g ? `${cell.isHome ? "vs" : "@"}${cell.opponent?.short ?? ""}${cell.doubleheader ? " ×2" : ""}` : ""}
+          </div>
           <div style={{ display: "flex", fontSize: 36 * s, color: numColor }}>{cell.day}</div>
         </div>
       );
@@ -249,15 +284,29 @@ export function Newspaper(props: RenderProps) {
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const g = cell.game && cell.inMonth;
-              const wl = cell.outcome === "win" ? "W" : cell.outcome === "lose" ? "L" : "";
-              const wlc = cell.outcome === "win" ? (light ? "#1f7a44" : "#7CFFB2") : "#d4555a";
+              // 승=W 초록 / 패=L 빨강 / 무=D 앰버 / 취소=PPD 회색, 더블헤더는 경기별로 나란히
+              const marks = cell.outcomes
+                .map((o) =>
+                  o === "win" ? { txt: "W", color: light ? "#1f7a44" : "#7CFFB2" }
+                  : o === "lose" ? { txt: "L", color: "#d4555a" }
+                  : o === "draw" ? { txt: "D", color: light ? "#a87f1c" : "#ffd27a" }
+                  : o === "canceled" ? { txt: "PPD", color: sub }
+                  : null
+                )
+                .filter((m): m is { txt: string; color: string } => m !== null);
               return (
                 <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, padding: `${8 * s}px ${4 * s}px`, borderRight: di < 6 ? `1px solid ${rule}` : "none" }}>
                   <div style={{ display: "flex", fontSize: 26 * s, fontWeight: 700, color: today ? "#d4555a" : !cell.inMonth ? sub : fg, ...(today ? { background: light ? "rgba(212,85,90,0.12)" : "rgba(212,85,90,0.2)", paddingLeft: 4 * s, paddingRight: 4 * s, alignSelf: "flex-start" } : {}) }}>{cell.day}</div>
                   {g && (
                     <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}>
-                      <div style={{ display: "flex", fontSize: 11 * s, color: sub }}>{cell.isHome ? "vs " : "@ "}{cell.opponent?.short}</div>
-                      {wl && <div style={{ display: "flex", fontSize: 11 * s, fontWeight: 700, color: wlc }}>[{wl}]</div>}
+                      <div style={{ display: "flex", fontSize: 11 * s, color: sub }}>{cell.isHome ? "vs " : "@ "}{cell.opponent?.short}{cell.doubleheader ? " ×2" : ""}</div>
+                      {marks.length > 0 && (
+                        <div style={{ display: "flex" }}>
+                          {marks.map((m, mi) => (
+                            <div key={mi} style={{ display: "flex", fontSize: 11 * s, fontWeight: 700, color: m.color, marginRight: 4 * s }}>[{m.txt}]</div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -317,9 +366,20 @@ export function Brutal(props: RenderProps) {
                   </div>
                   <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", fontSize: 30 * s, fontWeight: 800, color: today ? "#fff" : !cell.inMonth ? "rgba(242,239,230,0.3)" : "#f2efe6" }}>{cell.day}</div>
-                    {cell.game && cell.inMonth && (cell.outcome === "win" || cell.outcome === "lose") && (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20 * s, height: 20 * s, fontSize: 13 * s, fontWeight: 800, ...(cell.outcome === "win" ? { background: "#e2042b", color: "#fff" } : { border: "1.4px solid rgba(242,239,230,0.6)", color: "rgba(242,239,230,0.85)" }) }}>
-                        {cell.outcome === "win" ? "W" : "L"}
+                    {cell.game && cell.inMonth && (
+                      <div style={{ display: "flex" }}>
+                        {/* 승=빨강 채움 W / 패=테두리 L / 무=앰버 채움 D / 취소=흐린 테두리 C */}
+                        {cell.outcomes.map((o, oi) =>
+                          o === "scheduled" ? null : (
+                            <div key={oi} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 20 * s, height: 20 * s, fontSize: 13 * s, fontWeight: 800, marginLeft: oi > 0 ? 3 * s : 0,
+                              ...(o === "win" ? { background: "#e2042b", color: "#fff" }
+                                : o === "lose" ? { border: "1.4px solid rgba(242,239,230,0.6)", color: "rgba(242,239,230,0.85)" }
+                                : o === "draw" ? { background: "#d9a83c", color: "#0d0d0d" }
+                                : { border: "1.4px solid rgba(242,239,230,0.3)", color: "rgba(242,239,230,0.4)" }) }}>
+                              {o === "win" ? "W" : o === "lose" ? "L" : o === "draw" ? "D" : "C"}
+                            </div>
+                          )
+                        )}
                       </div>
                     )}
                     {today && <div style={{ display: "flex", fontSize: 11 * s, fontWeight: 700, color: "#fff" }}>TODAY</div>}
@@ -363,7 +423,10 @@ export function Nighter(props: RenderProps) {
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const c = cell.opponent ? chipColor(cell.opponent.id) : "#fff";
-              const dotColor = cell.outcome === "win" ? "#36c46b" : cell.outcome === "lose" ? "#e2042b" : null;
+              // 승=초록 / 패=빨강 / 무=앰버 / 취소=회색, 더블헤더는 도트 2개
+              const dots = cell.outcomes
+                .map((o): string | null => (o === "win" ? "#36c46b" : o === "lose" ? "#e2042b" : o === "draw" ? DRAW_AMBER : o === "canceled" ? "rgba(255,255,255,0.35)" : null))
+                .filter((x): x is string => x !== null);
               return (
                 <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, margin: 2 * s, border: "1px solid rgba(255,255,255,0.10)", background: cell.inMonth && cell.game ? "rgba(255,255,255,0.03)" : "transparent", padding: 7 * s, justifyContent: "space-between", position: "relative" }}>
                   <div style={{ display: "flex", height: 16 * s }}>
@@ -375,7 +438,13 @@ export function Nighter(props: RenderProps) {
                   </div>
                   <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", fontSize: 28 * s, fontWeight: 700, color: today ? "#ff4d4d" : !cell.inMonth ? "rgba(255,255,255,0.3)" : "#fff" }}>{cell.day}</div>
-                    {dotColor && <div style={{ display: "flex", width: 8 * s, height: 8 * s, borderRadius: 2, background: dotColor }} />}
+                    {dots.length > 0 && (
+                      <div style={{ display: "flex" }}>
+                        {dots.map((dc, dj) => (
+                          <div key={dj} style={{ display: "flex", width: 8 * s, height: 8 * s, borderRadius: 2, background: dc, marginLeft: dj > 0 ? 3 * s : 0 }} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {today && <div style={{ display: "flex", position: "absolute", right: 0, top: 0, bottom: 0, width: 4 * s, background: "#e2042b" }} />}
                 </div>
@@ -422,11 +491,23 @@ export function Led(props: RenderProps) {
           <div key={wi} style={{ display: "flex", height: rowH }}>
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
-              const wl = cell.outcome === "win" ? "W" : cell.outcome === "lose" ? "L" : "";
-              const wlColor = cell.outcome === "win" ? "#36c46b" : "#ff5a3c";
+              // 승=W 초록 / 패=L 빨강 / 무=D 노랑 / 취소=C 흐린 앰버, 더블헤더는 경기별로 나란히
+              const marks = cell.outcomes
+                .map((o) =>
+                  o === "win" ? { txt: "W", color: "#36c46b" }
+                  : o === "lose" ? { txt: "L", color: "#ff5a3c" }
+                  : o === "draw" ? { txt: "D", color: "#ffd27a" }
+                  : o === "canceled" ? { txt: "C", color: "rgba(255,176,46,0.45)" }
+                  : null
+                )
+                .filter((m): m is { txt: string; color: string } => m !== null);
               return (
                 <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, alignItems: "center", justifyContent: "center", gap: 2 * s, margin: 2 * s, background: today ? "#e2042b" : "transparent", padding: `${6 * s}px 0` }}>
-                  <div style={{ display: "flex", height: 16 * s, fontSize: 13 * s, fontWeight: 800, color: today ? "#fff" : wlColor }}>{wl}</div>
+                  <div style={{ display: "flex", height: 16 * s }}>
+                    {marks.map((m, mi) => (
+                      <div key={mi} style={{ display: "flex", fontSize: 13 * s, fontWeight: 800, color: today ? "#fff" : m.color, marginLeft: mi > 0 ? 3 * s : 0 }}>{m.txt}</div>
+                    ))}
+                  </div>
                   <div style={{ display: "flex", fontSize: 26 * s, fontWeight: 700, color: today ? "#fff" : !cell.inMonth ? "rgba(255,176,46,0.25)" : amber }}>{cell.day}</div>
                   <div style={{ display: "flex", height: 14 * s, fontSize: 11 * s, fontWeight: 700, color: today ? "#fff" : "rgba(255,176,46,0.7)" }}>{cell.game && cell.inMonth ? cell.opponent?.en?.slice(0, 4) : ""}</div>
                 </div>

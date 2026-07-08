@@ -1,6 +1,6 @@
 // BENTO 대시보드: 전적·다음경기·홈원정·미니캘린더·진행바 카드
 import React from "react";
-import { RenderProps, buildMatrix, chipColor, EN_MONTH_SHORT, WEEK_KO } from "./common";
+import { RenderProps, buildMatrix, chipColor, formatPct, EN_MONTH_SHORT, WEEK_KO } from "./common";
 
 function Label({ children, s, color }: { children: React.ReactNode; s: number; color: string }) {
   return <div style={{ display: "flex", fontSize: 16 * s, letterSpacing: 3, color, fontWeight: 600 }}>{children}</div>;
@@ -18,7 +18,7 @@ export function Bento(props: RenderProps) {
   const LABEL = light ? "rgba(22,24,29,0.45)" : "rgba(255,255,255,0.4)";
   const TRACK = light ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.12)";
   const rec = season?.record ?? { w: 0, l: 0, d: 0, pct: 0 };
-  const pctStr = "." + String(Math.round(rec.pct * 1000)).padStart(3, "0");
+  const pctStr = formatPct(rec.pct);
 
   const homeN = games.filter((g) => g.home?.id === team.id).length;
   const awayN = games.length - homeN;

@@ -1,27 +1,29 @@
 // 시즌 그리드: grass(직각) / grass-soft(둥근) / dots(원) / diamond(다이아몬드)
 import React from "react";
-import { RenderProps, chipColor } from "./common";
+import { RenderProps, chipColor, formatPct, DRAW_AMBER } from "./common";
 import { Outcome } from "../season";
 
+// 승=팀색 / 패=회색 / 무=앰버 / 취소=마룬 / 예정=링 — 범례와 동일한 규칙
 function outcomeColor(o: Outcome, win: string): { fill: string; border?: string } {
   switch (o) {
     case "win": return { fill: win };
     case "lose": return { fill: "#3d3d44" };
-    case "draw": return { fill: "#5a1a22" };
-    default: return { fill: "#16161b" }; // scheduled / canceled
+    case "draw": return { fill: DRAW_AMBER };
+    case "canceled": return { fill: "#5a1a22" };
+    default: return { fill: "transparent", border: "#2a2a30" }; // scheduled
   }
 }
 
 function Legend({ s, win }: { s: number; win: string }) {
   const item = (color: string, label: string, ring?: boolean) => (
-    <div style={{ display: "flex", alignItems: "center", marginRight: 18 * s }}>
+    <div style={{ display: "flex", alignItems: "center", marginRight: 16 * s }}>
       <div style={{ display: "flex", width: 12 * s, height: 12 * s, borderRadius: 3, background: ring ? "transparent" : color, border: ring ? `1px solid ${color}` : "none", marginRight: 6 * s }} />
       <div style={{ display: "flex", fontSize: 14 * s, color: "rgba(255,255,255,0.55)", letterSpacing: 1 }}>{label}</div>
     </div>
   );
   return (
     <div style={{ display: "flex", justifyContent: "center" }}>
-      {item(win, "WIN")}{item("#3d3d44", "LOSS")}{item("#5a1a22", "DRAW")}{item("#2a2a30", "UPCOMING", true)}
+      {item(win, "WIN")}{item("#3d3d44", "LOSS")}{item(DRAW_AMBER, "DRAW")}{item("#5a1a22", "CANCELED")}{item("#2a2a30", "UPCOMING", true)}
     </div>
   );
 }
@@ -69,7 +71,7 @@ export function Diamond(props: RenderProps) {
   const s = width / 1170;
   const win = chipColor(team.id);
   const rec = season?.record ?? { w: 0, l: 0, d: 0, pct: 0 };
-  const pctStr = "." + String(Math.round(rec.pct * 1000)).padStart(3, "0");
+  const pctStr = formatPct(rec.pct);
   const games = season?.games ?? [];
 
   const cx = width / 2;
