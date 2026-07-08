@@ -17,9 +17,8 @@ export const RESOLUTIONS: Resolution[] = [
   { id: "android-qhd", label: "Android QHD (1440×3120)", width: 1440, height: 3120 },
 ];
 
-export function resolutionById(id: string | null | undefined): Resolution {
-  return RESOLUTIONS.find((r) => r.id === id) ?? RESOLUTIONS[2];
-}
+// res 파라미터 생략 시 기본 해상도 (iPhone 15 Pro)
+export const DEFAULT_RESOLUTION: Resolution = RESOLUTIONS[2];
 
 export type StyleId =
   | "minimal"
@@ -97,9 +96,10 @@ export interface Palette {
   win: string;
   lose: string;
   draw: string;
+  cancel: string;
 }
 
-// list 스타일용 팀 컬러 팔레트
+// list 스타일용 팀 컬러 팔레트 (승=초록 / 패=빨강 / 무=앰버 / 취소=회색)
 export function buildPalette(_style: StyleId, teamPrimary: string, teamSecondary: string): Palette {
   return {
     bgFrom: teamPrimary,
@@ -110,8 +110,9 @@ export function buildPalette(_style: StyleId, teamPrimary: string, teamSecondary
     card: "rgba(255,255,255,0.08)",
     accent: teamSecondary,
     win: "#7CFFB2",
-    lose: "rgba(255,255,255,0.45)",
-    draw: "rgba(255,255,255,0.7)",
+    lose: "#FFB3BC",
+    draw: "#FFD27A",
+    cancel: "rgba(255,255,255,0.55)",
   };
 }
 

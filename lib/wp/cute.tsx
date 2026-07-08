@@ -1,7 +1,8 @@
 // CUTE · 아기자기(둥근 손그림) 스타일 — 어두운 배경 + 둥근 손그림풍 셀.
 // next/og(Satori) 제약: 인라인 스타일 + flex 만, borderRadius/boxShadow 지원.
 import React from "react";
-import { RenderProps, buildMatrix, DayCell, WEEK_KO, weekdayColor, chipColor } from "./common";
+import { RenderProps, buildMatrix, DayCell, WEEK_KO, weekdayColor, chipColor, allCanceled } from "./common";
+import { Outcome } from "../season";
 import { mascotDataUri } from "../mascots";
 
 function isToday(cell: DayCell, todayISO: string, year: number, month: number): boolean {
@@ -20,10 +21,19 @@ export function Cute(props: RenderProps) {
   const fg = "#f3efe8";
   const sub = "rgba(243,239,232,0.5)";
 
-  // 승=짙은 초록 / 패=짙은 마룬 채움
+  // 승=짙은 초록 / 패=짙은 마룬 / 무=짙은 앰버 / 취소=짙은 회색 채움
   const winBg = "#14331f", winBd = "rgba(124,255,178,0.35)";
   const loseBg = "#36161b", loseBd = "rgba(255,138,150,0.30)";
+  const drawBg = "#33290f", drawBd = "rgba(255,210,122,0.35)";
+  const cancelBg = "#1d1d22", cancelBd = "rgba(243,239,232,0.25)";
   const restBd = "rgba(243,239,232,0.14)";
+
+  const fillFor = (o: Outcome): { bg: string; bd: string } =>
+    o === "win" ? { bg: winBg, bd: winBd }
+    : o === "lose" ? { bg: loseBg, bd: loseBd }
+    : o === "draw" ? { bg: drawBg, bd: drawBd }
+    : o === "canceled" ? { bg: cancelBg, bd: cancelBd }
+    : { bg: "transparent", bd: restBd };
 
   // 셀이 폰처럼 길쭉해지지 않도록 가로 대비 적정 높이로 제한
   const cellW = (width - pad * 2) / 7;
@@ -72,12 +82,16 @@ export function Cute(props: RenderProps) {
             {week.map((cell, di) => {
               const today = isToday(cell, todayISO, year, month);
               const g = cell.game && cell.inMonth;
-              const win = cell.outcome === "win";
-              const lose = cell.outcome === "lose";
+              const canceled = allCanceled(cell);
               // 손그림 느낌: 셀마다 살짝 다른 둥근 모서리
               const rad = `${(18 + ((cell.day * 5) % 7)) * s}px ${(22 - ((cell.day * 3) % 6)) * s}px ${(19 + ((cell.day * 7) % 5)) * s}px ${(21 - ((cell.day * 2) % 7)) * s}px`;
-              const fillBg = g ? (win ? winBg : lose ? loseBg : "transparent") : "transparent";
-              const bd = g ? (win ? winBd : lose ? loseBd : restBd) : (cell.inMonth ? restBd : "transparent");
+              // 승·패·무·취소 각각 다른 채움, 더블헤더는 대각 분할
+              const a = fillFor(cell.outcomes[0] ?? "scheduled");
+              const b = cell.doubleheader ? fillFor(cell.outcomes[1] ?? "scheduled") : a;
+              const fillBg = !g ? "transparent"
+                : a.bg === b.bg ? a.bg
+                : `linear-gradient(135deg, ${a.bg} 0%, ${a.bg} 50%, ${b.bg} 50%, ${b.bg} 100%)`;
+              const bd = g ? (a.bd === b.bd ? a.bd : restBd) : (cell.inMonth ? restBd : "transparent");
               const oppColor = cell.opponent ? chipColor(cell.opponent.id) : accent;
               const numColor = today ? "#ff5a5a" : !cell.inMonth ? "rgba(243,239,232,0.22)" : fg;
               return (
@@ -94,9 +108,9 @@ export function Cute(props: RenderProps) {
                     {g && (
                       <div style={{ display: "flex", position: "absolute", top: 7 * s, width: 30 * s, height: 4 * s, borderRadius: 999, background: oppColor }} />
                     )}
-                    {/* 상대팀 라벨 */}
-                    <div style={{ display: "flex", height: 15 * s, fontSize: 12.5 * s, fontWeight: 700, color: g ? "rgba(243,239,232,0.82)" : "transparent", marginTop: g ? 8 * s : 0 }}>
-                      {g ? `${cell.isHome ? "vs" : "@"}${cell.opponent?.short ?? ""}` : ""}
+                    {/* 상대팀 라벨 (더블헤더 ×2 · 전 경기 취소 시 취소선) */}
+                    <div style={{ display: "flex", height: 15 * s, fontSize: 12.5 * s, fontWeight: 700, color: g ? (canceled ? "rgba(243,239,232,0.45)" : "rgba(243,239,232,0.82)") : "transparent", marginTop: g ? 8 * s : 0, ...(canceled ? { textDecoration: "line-through" } : {}) }}>
+                      {g ? `${cell.isHome ? "vs" : "@"}${cell.opponent?.short ?? ""}${cell.doubleheader ? " ×2" : ""}` : ""}
                     </div>
                     <div style={{ display: "flex", fontSize: 27 * s, fontWeight: 700, color: numColor }}>{cell.day}</div>
                   </div>

@@ -1,11 +1,11 @@
-// 글꼴을 인스턴스당 1회만 받아 캐시한다. next/og 는 OTF/TTF 를 지원한다.
+// 저장소에 번들된 글꼴(assets/fonts/)을 디스크에서 읽어 인스턴스당 1회 캐시한다.
+// 외부 CDN에 의존하지 않으므로 네트워크 장애가 렌더링 장애로 이어지지 않는다.
+// next/og 는 OTF/TTF 를 지원한다.
 
-const BASE =
-  "https://cdn.jsdelivr.net/gh/orioncactus/pretendard/packages/pretendard/dist/public/static";
+import { readFileSync } from "fs";
+import path from "path";
 
-// 손글씨 글꼴(Nanum Pen Script) — CUTE 스타일용. 전체 한글 글리프가 담긴 단일 TTF.
-const PEN_URL =
-  "https://cdn.jsdelivr.net/npm/@expo-google-fonts/nanum-pen-script@0.4.0/400Regular/NanumPenScript_400Regular.ttf";
+const FONT_DIR = path.join(process.cwd(), "assets", "fonts");
 
 export interface LoadedFont {
   name: string;
@@ -14,41 +14,30 @@ export interface LoadedFont {
   style: "normal";
 }
 
-let cache: Promise<LoadedFont[]> | null = null;
+let cache: LoadedFont[] | null = null;
 
-async function fetchFont(url: string): Promise<ArrayBuffer> {
-  // 글꼴은 2MB를 넘어 Next fetch 캐시에 못 들어가므로(경고 발생) 모듈 메모리 캐시(cache)에만 의존한다.
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`font ${url} ${res.status}`);
-  return res.arrayBuffer();
+function readFont(file: string): ArrayBuffer {
+  const buf = readFileSync(path.join(FONT_DIR, file));
+  // Buffer 의 내부 풀 공유를 피해 정확한 구간만 ArrayBuffer 로 복사한다.
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
 }
 
-export function loadFonts(): Promise<LoadedFont[]> {
+export function loadFonts(): LoadedFont[] {
   if (!cache) {
-    cache = (async () => {
-      const [regular, bold] = await Promise.all([
-        fetchFont(`${BASE}/Pretendard-Regular.otf`),
-        fetchFont(`${BASE}/Pretendard-Bold.otf`),
-      ]);
-      const fonts: LoadedFont[] = [
-        { name: "Pretendard", data: regular, weight: 400, style: "normal" },
-        { name: "Pretendard", data: bold, weight: 700, style: "normal" },
-        { name: "Pretendard", data: bold, weight: 800, style: "normal" },
-      ];
+    const fonts: LoadedFont[] = [
+      { name: "Pretendard", data: readFont("Pretendard-Regular.otf"), weight: 400, style: "normal" },
+      { name: "Pretendard", data: readFont("Pretendard-Bold.otf"), weight: 700, style: "normal" },
+      { name: "Pretendard", data: readFont("Pretendard-ExtraBold.otf"), weight: 800, style: "normal" },
+    ];
 
-      // 손글씨 글꼴은 베스트-에포트: 실패해도 Pretendard 로 폴백되도록 앱을 죽이지 않는다.
-      try {
-        const pen = await fetchFont(PEN_URL);
-        fonts.push({ name: "Nanum Pen Script", data: pen, weight: 400, style: "normal" });
-      } catch (e) {
-        console.warn("Nanum Pen Script 로드 실패 — Pretendard 로 폴백:", (e as Error).message);
-      }
+    // 손글씨 글꼴(CUTE·SKETCH용)은 베스트-에포트: 없으면 Pretendard 로 폴백한다.
+    try {
+      fonts.push({ name: "Nanum Pen Script", data: readFont("NanumPenScript-Regular.ttf"), weight: 400, style: "normal" });
+    } catch (e) {
+      console.warn("Nanum Pen Script 로드 실패 — Pretendard 로 폴백:", (e as Error).message);
+    }
 
-      return fonts;
-    })().catch((e) => {
-      cache = null; // 실패 시 다음 요청에서 재시도
-      throw e;
-    });
+    cache = fonts;
   }
   return cache;
 }

@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { getSchedule, filterTeamGames } from "@/lib/kbo";
 import { resolveTeam } from "@/lib/teams";
-import { resolutionById, isStyleId, isMode, needsSeasonData, supportsLight } from "@/lib/presets";
+import { RESOLUTIONS, STYLES, DEFAULT_RESOLUTION, isStyleId, isMode, needsSeasonData, supportsLight } from "@/lib/presets";
 import { getSeason } from "@/lib/season";
 import { loadFonts } from "@/lib/fonts";
 import { renderWallpaper } from "@/lib/wp";
@@ -17,14 +17,37 @@ function nowKST(): { year: number; month: number; iso: string } {
   return { year, month, iso };
 }
 
-/** year / month 파라미터 해석 (month 는 "1"~"12" 또는 "YYYY-MM") */
-function parsePeriod(yearRaw: string | null, monthRaw: string | null): { year: number; month: number } {
+function bad(msg: string): Response {
+  return new Response(msg, { status: 400 });
+}
+
+/**
+ * year / month 파라미터 해석 (month 는 "1"~"12" 또는 "YYYY-MM").
+ * 파라미터가 없으면 KST 현재 연·월 → 자동 업데이트 URL 이 매달 갱신되는 근거.
+ * 값이 있는데 형식이 틀리면 조용히 폴백하지 않고 error 를 돌려준다.
+ */
+function parsePeriod(
+  yearRaw: string | null,
+  monthRaw: string | null
+): { year: number; month: number; error?: string } {
   const cur = nowKST();
   let year = cur.year, month = cur.month;
-  const ym = monthRaw?.match(/^(\d{4})-(\d{1,2})$/);
-  if (ym) { year = Number(ym[1]); month = Number(ym[2]); }
-  else if (monthRaw && Number(monthRaw) >= 1 && Number(monthRaw) <= 12) month = Number(monthRaw);
-  if (yearRaw && /^\d{4}$/.test(yearRaw)) year = Number(yearRaw);
+
+  if (monthRaw) {
+    const ym = monthRaw.match(/^(\d{4})-(\d{1,2})$/);
+    const m = ym ? Number(ym[2]) : Number(monthRaw);
+    if (!Number.isInteger(m) || m < 1 || m > 12) {
+      return { year, month, error: `month 파라미터가 잘못되었습니다: "${monthRaw}" (1~12 또는 YYYY-MM)` };
+    }
+    month = m;
+    if (ym) year = Number(ym[1]);
+  }
+  if (yearRaw) {
+    if (!/^\d{4}$/.test(yearRaw)) {
+      return { year, month, error: `year 파라미터가 잘못되었습니다: "${yearRaw}" (예: 2026)` };
+    }
+    year = Number(yearRaw);
+  }
   return { year, month };
 }
 
@@ -32,13 +55,29 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
 
   const team = resolveTeam(sp.get("team"));
-  if (!team) return new Response("team 파라미터가 필요합니다 (예: ?team=KIA)", { status: 400 });
+  if (!team) return bad("team 파라미터가 필요합니다 (예: ?team=KIA)");
 
-  const { year, month } = parsePeriod(sp.get("year"), sp.get("month"));
-  const resolution = resolutionById(sp.get("res"));
+  // 파라미터가 없으면 기본값, 있는데 잘못된 값이면 조용히 폴백하지 않고 400 (오타 감지)
+  const { year, month, error } = parsePeriod(sp.get("year"), sp.get("month"));
+  if (error) return bad(error);
+
+  const resParam = sp.get("res");
+  const resolution = resParam ? RESOLUTIONS.find((r) => r.id === resParam) : DEFAULT_RESOLUTION;
+  if (!resolution) {
+    return bad(`res 파라미터가 잘못되었습니다: "${resParam}" (가능한 값: ${RESOLUTIONS.map((r) => r.id).join(", ")})`);
+  }
+
   const styleParam = sp.get("style");
+  if (styleParam && !isStyleId(styleParam)) {
+    return bad(`style 파라미터가 잘못되었습니다: "${styleParam}" (가능한 값: ${STYLES.map((s) => s.id).join(", ")})`);
+  }
   const style = isStyleId(styleParam) ? styleParam : "minimal";
+
   const modeParam = sp.get("mode");
+  if (modeParam && !isMode(modeParam)) {
+    return bad(`mode 파라미터가 잘못되었습니다: "${modeParam}" (가능한 값: dark, light)`);
+  }
+  // light 미지원 스타일은 dark 로 렌더링 (첫 화면 UI 와 동일한 규칙)
   const mode = isMode(modeParam) && supportsLight(style) ? modeParam : "dark";
   const today = nowKST().iso;
 
@@ -52,7 +91,13 @@ export async function GET(req: NextRequest) {
     return new Response(`KBO 일정을 불러오지 못했습니다: ${(e as Error).message}`, { status: 502 });
   }
 
-  const fonts = await loadFonts();
+  let fonts;
+  try {
+    fonts = loadFonts();
+  } catch (e) {
+    console.error("번들 글꼴 로드 실패:", e);
+    return new Response("글꼴을 불러오지 못했습니다 (서버 구성 오류)", { status: 500 });
+  }
 
   const img = new ImageResponse(
     renderWallpaper(style, {
