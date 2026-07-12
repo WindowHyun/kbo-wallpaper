@@ -8,12 +8,20 @@ import { resolveTeam } from "@/lib/teams";
 
 export const runtime = "nodejs";
 
-function nowKST(): { year: number; month: number; iso: string } {
+function nowKST(): { year: number; month: number; iso: string; minutes: number } {
   const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
   const year = d.getUTCFullYear();
   const month = d.getUTCMonth() + 1;
   const iso = `${year}-${String(month).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
-  return { year, month, iso };
+  const minutes = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return { year, month, iso, minutes };
+}
+
+/** "18:30" → 1110(분). 형식이 아니면 null. */
+function timeToMinutes(t: string): number | null {
+  const m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  return Number(m[1]) * 60 + Number(m[2]);
 }
 
 const CORS = {
@@ -48,9 +56,16 @@ export async function GET(req: NextRequest) {
     );
     const all = perMonth.flat();
 
-    // 다가오는 경기만: 오늘 이후 + 취소 아님 + 시각 존재
+    // 다가오는 경기만: (오늘이면 시작 전) + 취소 아님 + 시각 존재
     const upcoming = all
-      .filter((g) => g.date >= cur.iso && g.status !== "canceled" && /^\d{1,2}:\d{2}$/.test(g.time))
+      .filter((g) => {
+        if (g.status === "canceled") return false;
+        const mins = timeToMinutes(g.time);
+        if (mins === null) return false; // 시각 미정(TBD) 경기는 알림 예약 불가 → 제외
+        if (g.date > cur.iso) return true;
+        if (g.date < cur.iso) return false;
+        return mins >= cur.minutes; // 오늘 경기는 아직 시작 전인 것만
+      })
       .map((g) => ({
         date: g.date,
         time: g.time,

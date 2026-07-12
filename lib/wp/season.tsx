@@ -44,7 +44,7 @@ function GridSeason(props: RenderProps, shape: "square" | "soft" | "circle") {
     <div style={{ width, height, display: "flex", flexDirection: "column", justifyContent: "center", background: "#0a0a0c", fontFamily: "Pretendard", padding: `0 ${pad}px`, color: "#fff" }}>
       <div style={{ display: "flex", fontSize: 84 * s, fontWeight: 800, letterSpacing: 1 }}>{team.en}</div>
       <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.45)", marginTop: 4 * s, marginBottom: 22 * s }}>
-        {team.name.split(" ").pop()?.toUpperCase()} · {props.year} SEASON
+        {team.nickname} · {props.year} SEASON
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", width: innerW, alignContent: "flex-start", marginBottom: 30 * s }}>
         {games.map((sg, i) => {
@@ -106,7 +106,7 @@ export function Diamond(props: RenderProps) {
       <div style={{ display: "flex", flexDirection: "column", position: "absolute", left: 70 * s, top: height * 0.13 }}>
         <div style={{ display: "flex", fontSize: 84 * s, fontWeight: 800 }}>{team.en}</div>
         <div style={{ display: "flex", fontSize: 20 * s, letterSpacing: 4, color: "rgba(255,255,255,0.45)", marginTop: 4 * s }}>
-          {team.name.split(" ").pop()?.toUpperCase()} · {year} SEASON
+          {team.nickname} · {year} SEASON
         </div>
         <div style={{ display: "flex", flexDirection: "column", marginTop: 22 * s }}>
           <div style={{ display: "flex", fontSize: 15 * s, letterSpacing: 3, color: "rgba(255,255,255,0.4)" }}>RECORD</div>
