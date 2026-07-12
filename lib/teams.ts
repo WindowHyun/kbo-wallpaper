@@ -44,25 +44,34 @@ export const TEAMS: Team[] = [
 ];
 
 const BY_ID = new Map(TEAMS.map((t) => [t.id, t]));
-const BY_NAME = new Map<string, Team>();
-for (const t of TEAMS) for (const n of t.names) BY_NAME.set(n, t);
 
-// 다양한 표기(코드 OB / 영문 DOOSAN / 짧은표기 두산·KIA)로 팀을 찾는다.
+// 공백 제거 + 대문자 정규화 — KBO 응답/파라미터의 사소한 표기 차이를 흡수한다.
+function norm(s: string): string {
+  return s.replace(/\s+/g, "").toUpperCase();
+}
+
+// 코드·영문·별칭·정식명·짧은표기·한글 별칭을 모두 정규화해 한 맵에 담는다.
+// (일정 응답의 팀명 표기가 조금 바뀌어도 경기가 통째로 누락되지 않도록 최대한 관대하게 매칭)
 const BY_ANY = new Map<string, Team>();
 for (const t of TEAMS) {
-  for (const k of [t.id, t.en, t.short, ...t.names]) BY_ANY.set(k.toUpperCase(), t);
+  for (const k of [t.id, t.en, t.short, t.nickname, t.name, ...t.names]) {
+    const key = norm(k);
+    if (key && !BY_ANY.has(key)) BY_ANY.set(key, t);
+  }
 }
 
 export function teamById(id: string | null | undefined): Team | undefined {
   return id ? BY_ID.get(id) : undefined;
 }
 
-export function teamByName(name: string): Team | undefined {
-  return BY_NAME.get(name.trim());
+/** 일정 응답 play 셀의 팀명(한글/코드/영문 등)을 관대하게 팀으로 해석한다. */
+export function teamByName(name: string | null | undefined): Team | undefined {
+  if (!name) return undefined;
+  const key = norm(name);
+  return key ? BY_ANY.get(key) : undefined;
 }
 
 /** team 파라미터를 코드/영문/한글 어느 표기로 줘도 해석한다. */
 export function resolveTeam(param: string | null | undefined): Team | undefined {
-  if (!param) return undefined;
-  return BY_ANY.get(param.trim().toUpperCase());
+  return teamByName(param);
 }

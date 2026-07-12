@@ -14,6 +14,7 @@ import { Team, teamByName } from "./teams";
 // KBO_ENDPOINT 환경변수로 오버라이드 가능 (로컬 개발·테스트에서 목 서버를 쓸 때)
 const ENDPOINT =
   process.env.KBO_ENDPOINT ?? "https://www.koreabaseball.com/ws/Schedule.asmx/GetScheduleList";
+const DEFAULT_TIMEOUT_MS = 8000;
 
 export type GameStatus = "result" | "scheduled" | "canceled";
 
@@ -142,6 +143,17 @@ export async function fetchScheduleRows(opts: FetchOptions): Promise<Cell[][]> {
     teamId: opts.teamId ?? "",
   });
 
+  // 호출부가 signal 을 주지 않아도 항상 타임아웃을 건다(응답 지연 시 요청이 매달리는 것 방지).
+  // 시즌 스타일은 9개월치를 동시에 호출하므로 특히 중요.
+  const timeout = AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
+  let signal: AbortSignal = timeout;
+  if (opts.signal) {
+    signal =
+      typeof AbortSignal.any === "function"
+        ? AbortSignal.any([opts.signal, timeout])
+        : opts.signal;
+  }
+
   const res = await fetch(ENDPOINT, {
     method: "POST",
     headers: {
@@ -151,7 +163,7 @@ export async function fetchScheduleRows(opts: FetchOptions): Promise<Cell[][]> {
       "X-Requested-With": "XMLHttpRequest",
     },
     body: body.toString(),
-    signal: opts.signal,
+    signal,
     // KBO 데이터는 하루 단위로만 바뀌므로 6시간 캐시 (Next fetch 캐시)
     next: { revalidate: 60 * 60 * 6 },
   });
@@ -188,12 +200,20 @@ export function parseGames(rows: Cell[][], year: number, focusTeamId?: string): 
     if (!awayName || !homeName) continue;
 
     const gameId = extractGameId(cells);
-    const note = stripTags(cells[cells.length - 1]?.Text);
-    const stadium = stripTags(cells[cells.length - 2]?.Text);
+
+    // 구장/비고는 마지막 두 셀이지만, 취소·짧은 행에서는 그 자리에 play/time/day 셀이 올 수 있어
+    // 알려진 클래스 셀은 구장/비고로 오인하지 않도록 방어한다.
+    const known = new Set([dayCell, timeCell, playCell].filter(Boolean) as Cell[]);
+    const noteCell = cells[cells.length - 1];
+    const stadiumCell = cells[cells.length - 2];
+    const note = noteCell && !known.has(noteCell) ? stripTags(noteCell.Text) : "";
+    const stadium = stadiumCell && !known.has(stadiumCell) ? stripTags(stadiumCell.Text) : "";
 
     const rowText = cells.map((c) => stripTags(c.Text)).join(" ");
     let status: GameStatus = "scheduled";
-    if (/취소|연기|서스펜디드|노게임/.test(rowText)) status = "canceled";
+    // 취소/연기/노게임은 무효 경기 → 점수 폐기. "서스펜디드"(재개 예정)는 최종 점수가
+    // 확정되면 별도 취소 표기 없이 결과로 내려오므로 취소로 단정하지 않는다.
+    if (/취소|연기|노게임/.test(rowText)) status = "canceled";
     else if (awayScore !== null && homeScore !== null) status = "result";
 
     const { iso, weekday } = buildDate(year, curMonth, curDay);

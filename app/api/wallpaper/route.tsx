@@ -67,6 +67,12 @@ export async function GET(req: NextRequest) {
     return bad(`res 파라미터가 잘못되었습니다: "${resParam}" (가능한 값: ${RESOLUTIONS.map((r) => r.id).join(", ")})`);
   }
 
+  // 미리보기 등에서 실제 해상도를 줄여 받기 위한 축소 배율 (0.2~1). 렌더 결과는 동일하고 픽셀만 작아진다.
+  const scaleRaw = Number(sp.get("scale"));
+  const scale = Number.isFinite(scaleRaw) && scaleRaw > 0 ? Math.min(1, Math.max(0.2, scaleRaw)) : 1;
+  const outW = Math.round(resolution.width * scale);
+  const outH = Math.round(resolution.height * scale);
+
   const styleParam = sp.get("style");
   if (styleParam && !isStyleId(styleParam)) {
     return bad(`style 파라미터가 잘못되었습니다: "${styleParam}" (가능한 값: ${STYLES.map((s) => s.id).join(", ")})`);
@@ -99,17 +105,22 @@ export async function GET(req: NextRequest) {
     return new Response("글꼴을 불러오지 못했습니다 (서버 구성 오류)", { status: 500 });
   }
 
-  const img = new ImageResponse(
-    renderWallpaper(style, {
-      team, year, month, games, season, todayISO: today, mode,
-      width: resolution.width, height: resolution.height,
-    }),
-    {
-      width: resolution.width,
-      height: resolution.height,
-      fonts: fonts.map((f) => ({ name: f.name, data: f.data, weight: f.weight, style: f.style })),
-    }
-  );
+  let img;
+  try {
+    img = new ImageResponse(
+      renderWallpaper(style, {
+        team, year, month, games, season, todayISO: today, mode,
+        width: outW, height: outH,
+      }),
+      {
+        width: outW,
+        height: outH,
+        fonts: fonts.map((f) => ({ name: f.name, data: f.data, weight: f.weight, style: f.style })),
+      }
+    );
+  } catch (e) {
+    return new Response(`이미지 렌더링 실패: ${(e as Error).message}`, { status: 500 });
+  }
 
   // 참고: fmt=webp 파라미터는 URL 호환을 위해 허용하지만 현재 PNG 로 응답한다.
   // (webp 변환은 sharp 네이티브 모듈이 필요한데 일부 환경에서 불안정해 제외)

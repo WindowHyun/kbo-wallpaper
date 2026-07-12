@@ -46,6 +46,7 @@ async function fetchMonth(year: number, month: number, teamId: string): Promise<
 }
 
 export async function getSeason(year: number, teamId: string): Promise<SeasonData> {
+  // 한 월이라도 실패하면 fetchMonth 가 던진다 → 틀린 전적을 조용히 렌더하지 않고 표면화한다.
   const monthResults = await Promise.all(
     SEASON_MONTHS.map((m) => fetchMonth(year, m, teamId))
   );
@@ -55,7 +56,8 @@ export async function getSeason(year: number, teamId: string): Promise<SeasonDat
   for (const month of monthResults) {
     for (const g of month) {
       if (g.away?.id !== teamId && g.home?.id !== teamId) continue;
-      const key = g.gameId || `${g.date}-${g.awayName}-${g.homeName}`;
+      // gameId 가 없는(미래) 더블헤더 2차전이 사라지지 않도록 시각까지 키에 포함한다.
+      const key = g.gameId || `${g.date}-${g.awayName}-${g.homeName}-${g.time}`;
       if (seen.has(key)) continue;
       seen.add(key);
       const { isHome, outcome } = teamOutcome(g, teamId);

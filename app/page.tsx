@@ -30,8 +30,8 @@ export default function Home() {
   // 자동 업데이트 URL: 연·월 생략 → 매달 KST 현재 달로 자동 갱신
   const autoPath = `/api/wallpaper?${common}`;
 
-  // 미리보기는 실제 해상도를 쓰되 CSS로 축소
-  const previewUrl = useMemo(() => path, [path]);
+  // 미리보기는 축소 배율(scale=0.5)로 받아 payload 를 1/4 로 줄인다(렌더 결과는 동일).
+  const previewUrl = useMemo(() => `${path}&scale=0.5`, [path]);
 
   // 옵션 변경으로 미리보기 URL이 바뀌면 로딩 표시를 다시 켠다
   // (<img>의 loadstart 이벤트는 대부분의 브라우저에서 발화하지 않아 렌더 중 상태 보정으로 처리)
