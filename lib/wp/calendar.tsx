@@ -1,6 +1,7 @@
 // 캘린더 계열 스타일: minimal, mascot, brutal, nighter, led
 import React from "react";
 import {
+  accentFor,
   RenderProps, buildMatrix, DayCell, Chip, chipColor, ENGLISH_MONTHS, EN_MONTH_SHORT,
   WEEK_KO, WEEK_EN, weekdayColor, calTheme, CalTheme, DRAW_AMBER, CANCEL_GRAY, allCanceled,
 } from "./common";
@@ -43,7 +44,7 @@ function MinimalBase(props: RenderProps, withMascot: boolean) {
   const t = calTheme(mode);
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 40 * s;
-  const accent = team.primary === "#000000" ? "#EB1C24" : team.primary;
+  const accent = accentFor(team, t.bg);
   const cellW = (width - pad * 2) / 7;
   const rowH = cellW * 1.2; // 셀 고정 높이 → 격자가 아래로 늘어나지 않음
 
@@ -151,7 +152,7 @@ export function Sketch(props: RenderProps) {
   const { team, year, month, games, todayISO, mode, width: W, height: H } = props;
   const s = W / 1170;
   const light = mode === "light";
-  const accent = team.primary === "#000000" ? "#EB1C24" : team.primary;
+  const accent = accentFor(team, light ? "#f4f1e8" : "#0d0d10");
   const ink = light ? "#2b2a26" : "#f3efe6";
   const sub = light ? "rgba(43,42,38,0.5)" : "rgba(243,239,230,0.5)";
   const faint = light ? "rgba(43,42,38,0.22)" : "rgba(243,239,230,0.18)";
@@ -323,6 +324,7 @@ export function Newspaper(props: RenderProps) {
 export function Brutal(props: RenderProps) {
   const { team, year, month, games, todayISO, width, height } = props;
   const s = width / 1170;
+  const accent = accentFor(team, "#0d0d0d"); // 어두운 대표색(두산·롯데 등)도 #0d0d0d 위에서 보이게 보정
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 44 * s;
   const rowH = ((width - pad * 2) / 7) * 1.25; // 셀 높이 고정 → 블록 전체를 세로 중앙 배치
@@ -338,7 +340,7 @@ export function Brutal(props: RenderProps) {
       </div>
       <div style={{ display: "flex", fontSize: 150 * s, fontWeight: 800, lineHeight: 0.92, letterSpacing: -2 }}>{team.en}</div>
       <div style={{ display: "flex", alignItems: "center", margin: `${10 * s}px 0 6px` }}>
-        <div style={{ display: "flex", width: 70 * s, height: 8 * s, background: team.primary === "#000000" ? "#EB1C24" : team.primary, marginRight: 14 * s }} />
+        <div style={{ display: "flex", width: 70 * s, height: 8 * s, background: accent, marginRight: 14 * s }} />
         <div style={{ display: "flex", fontSize: 22 * s, fontWeight: 700, letterSpacing: 3, color: "rgba(242,239,230,0.8)" }}>MONTHLY · {year}</div>
       </div>
       <div style={{ display: "flex", fontSize: 18 * s, letterSpacing: 2, color: "rgba(242,239,230,0.5)", marginBottom: 16 * s }}>
@@ -346,7 +348,7 @@ export function Brutal(props: RenderProps) {
       </div>
       <div style={{ display: "flex" }}>
         {WEEK_KO.map((w, i) => (
-          <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", alignItems: "center", height: 34 * s, fontSize: 20 * s, fontWeight: 700, background: i === 0 ? team.primary : "#1a1a1a", color: "#fff" }}>{w}</div>
+          <div key={i} style={{ display: "flex", flex: 1, justifyContent: "center", alignItems: "center", height: 34 * s, fontSize: 20 * s, fontWeight: 700, background: i === 0 ? accent : "#1a1a1a", color: "#fff" }}>{w}</div>
         ))}
       </div>
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -356,7 +358,7 @@ export function Brutal(props: RenderProps) {
               const today = isToday(cell, todayISO, year, month);
               const c = cell.opponent ? chipColor(cell.opponent.id) : "#fff";
               return (
-                <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, border: "1px solid #2a2a2a", background: today ? (team.primary === "#000000" ? "#EB1C24" : team.primary) : "#0d0d0d", padding: `${6 * s}px ${6 * s}px`, justifyContent: "space-between" }}>
+                <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, border: "1px solid #2a2a2a", background: today ? accent : "#0d0d0d", padding: `${6 * s}px ${6 * s}px`, justifyContent: "space-between" }}>
                   <div style={{ display: "flex", height: 16 * s }}>
                     {cell.game && cell.inMonth && (
                       <div style={{ display: "flex", fontSize: 12 * s, fontWeight: 700, color: today ? "#fff" : c }}>

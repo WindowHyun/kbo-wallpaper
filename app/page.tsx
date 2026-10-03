@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { TEAMS } from "@/lib/teams";
 import { RESOLUTIONS, STYLES, supportsLight, isStyleId } from "@/lib/presets";
 
@@ -40,6 +40,13 @@ export default function Home() {
     setShownUrl(previewUrl);
     setLoading(true);
   }
+
+  // 서버에서 렌더된 <img> 는 하이드레이션 전에 이미 로드를 끝낼 수 있어 onLoad 가 오지 않는다
+  // (스피너가 계속 남는 문제). 마운트·URL 변경 직후 이미 완료 상태면 로딩 표시를 끈다.
+  const imgRef = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    if (imgRef.current?.complete) setLoading(false);
+  }, [previewUrl]);
 
   // origin 은 클라이언트에서만 알 수 있다 (SSR 렌더에서는 빈 문자열 → 하이드레이션 불일치 방지)
   const origin = useSyncExternalStore(
@@ -181,6 +188,7 @@ export default function Home() {
           {/* API가 즉석 생성하는 PNG 라 next/image 최적화가 무의미 — 원본 <img> 사용 */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            ref={imgRef}
             key={previewUrl}
             src={previewUrl}
             alt="미리보기"

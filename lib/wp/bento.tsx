@@ -1,6 +1,6 @@
 // BENTO 대시보드: 전적·다음경기·홈원정·미니캘린더·진행바 카드
 import React from "react";
-import { RenderProps, buildMatrix, chipColor, formatPct, EN_MONTH_SHORT, WEEK_KO } from "./common";
+import { RenderProps, buildMatrix, chipColor, formatPct, accentFor, EN_MONTH_SHORT, WEEK_KO } from "./common";
 
 function Label({ children, s, color }: { children: React.ReactNode; s: number; color: string }) {
   return <div style={{ display: "flex", fontSize: 16 * s, letterSpacing: 3, color, fontWeight: 600 }}>{children}</div>;
@@ -10,10 +10,10 @@ export function Bento(props: RenderProps) {
   const { team, year, month, games, season, todayISO, mode, width, height } = props;
   const s = width / 1170;
   const pad = 40 * s;
-  const accent = team.primary === "#000000" ? "#EB1C24" : team.primary;
   const light = mode === "light";
   const PAGE = light ? "#eceef2" : "#0a0a0c";
   const CARD = light ? "#ffffff" : "#15161c";
+  const accent = accentFor(team, CARD);
   const FG = light ? "#16181d" : "#ffffff";
   const LABEL = light ? "rgba(22,24,29,0.45)" : "rgba(255,255,255,0.4)";
   const TRACK = light ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.12)";

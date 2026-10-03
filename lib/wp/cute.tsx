@@ -1,7 +1,7 @@
 // CUTE · 아기자기(둥근 손그림) 스타일 — 어두운 배경 + 둥근 손그림풍 셀.
 // next/og(Satori) 제약: 인라인 스타일 + flex 만, borderRadius/boxShadow 지원.
 import React from "react";
-import { RenderProps, buildMatrix, DayCell, WEEK_KO, weekdayColor, chipColor, allCanceled } from "./common";
+import { RenderProps, buildMatrix, DayCell, WEEK_KO, weekdayColor, chipColor, allCanceled, accentFor } from "./common";
 import { Outcome } from "../season";
 import { mascotDataUri } from "../mascots";
 
@@ -17,7 +17,7 @@ export function Cute(props: RenderProps) {
   const weeks = buildMatrix(year, month, games, team.id);
   const pad = 44 * s;
 
-  const accent = team.primary === "#000000" ? "#EB1C24" : team.primary;
+  const accent = accentFor(team, "#0a0a0c");
   const fg = "#f3efe8";
   const sub = "rgba(243,239,232,0.5)";
 
