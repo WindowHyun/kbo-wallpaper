@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const perMonth = await Promise.all(
-      periods.map(async (p) => filterTeamGames(await getSchedule({ ...p, teamId: team.id }), team.id))
+      periods.map(async (p) => filterTeamGames(await getSchedule({ ...p, teamId: team.id, fresh: true }), team.id))
     );
     const all = perMonth.flat();
 
@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
 
     return Response.json(
       { team: { id: team.id, en: team.en, short: team.short, name: team.name }, generatedAt: cur.iso, count: upcoming.length, games: upcoming },
-      { headers: { ...CORS, "Cache-Control": "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400" } }
+      { headers: { ...CORS, "Cache-Control": "public, max-age=0, s-maxage=900" } }
     );
   } catch (e) {
     return Response.json({ error: `KBO 일정을 불러오지 못했습니다: ${(e as Error).message}` }, { status: 502, headers: CORS });

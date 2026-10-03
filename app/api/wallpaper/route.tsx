@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-import { getSchedule, filterTeamGames } from "@/lib/kbo";
+import { getSchedule, filterTeamGames, isOngoingPeriod } from "@/lib/kbo";
 import { resolveTeam } from "@/lib/teams";
 import { RESOLUTIONS, STYLES, DEFAULT_RESOLUTION, isStyleId, isMode, needsSeasonData, supportsLight } from "@/lib/presets";
 import { getSeason } from "@/lib/season";
@@ -48,6 +48,10 @@ function parsePeriod(
     }
     year = Number(yearRaw);
   }
+  // KBO 출범(1982)~내년만 허용 — 임의 연도로 업스트림 호출·렌더가 낭비되는 것을 막는다.
+  if (year < 1982 || year > cur.year + 1) {
+    return { year, month, error: `year 가 범위를 벗어났습니다: ${year} (1982~${cur.year + 1})` };
+  }
   return { year, month };
 }
 
@@ -90,7 +94,7 @@ export async function GET(req: NextRequest) {
   let games;
   let season;
   try {
-    const all = await getSchedule({ year, month, teamId: team.id });
+    const all = await getSchedule({ year, month, teamId: team.id, fresh: isOngoingPeriod(year, month) });
     games = filterTeamGames(all, team.id).sort((a, b) => a.date.localeCompare(b.date));
     if (needsSeasonData(style)) season = await getSeason(year, team.id);
   } catch (e) {
@@ -124,6 +128,8 @@ export async function GET(req: NextRequest) {
 
   // 참고: fmt=webp 파라미터는 URL 호환을 위해 허용하지만 현재 PNG 로 응답한다.
   // (webp 변환은 sharp 네이티브 모듈이 필요한데 일부 환경에서 불안정해 제외)
-  img.headers.set("Cache-Control", "public, max-age=0, s-maxage=21600, stale-while-revalidate=86400");
+  // stale-while-revalidate 는 쓰지 않는다: 하루 1회 갱신하는 클라이언트(WallSync)가 항상 직전 주기의
+  // 이미지를 받게 된다. 짧은 s-maxage 로 부하만 흡수한다.
+  img.headers.set("Cache-Control", "public, max-age=0, s-maxage=1800");
   return img;
 }
