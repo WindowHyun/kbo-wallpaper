@@ -1,6 +1,6 @@
 // KPOP-CARD 포토카드: 홀로그램 테두리 + 반짝이 + 큰 이니셜 + 하단 달력
 import React from "react";
-import { RenderProps, buildMatrix, chipColor, EN_MONTH_SHORT, WEEK_KO, DRAW_AMBER } from "./common";
+import { RenderProps, buildMatrix, chipColor, EN_MONTH_SHORT, WEEK_KO, DRAW_AMBER, accentFor } from "./common";
 
 function confetti(w: number, h: number): React.ReactNode[] {
   const colors = ["#ffd54a", "#4ad6ff", "#ff6bd6", "#7CFFB2", "#ffae42", "#a78bfa"];
@@ -21,7 +21,8 @@ export function Kpop(props: RenderProps) {
   const { team, year, month, games, todayISO, width, height } = props;
   const s = width / 1170;
   const pad = 34 * s;
-  const accent = team.primary === "#000000" ? "#EB1C24" : team.primary;
+  const accent = team.primary === "#000000" ? "#EB1C24" : team.primary; // 카드 그라디언트 바탕(원색 유지)
+  const accentOnDark = accentFor(team, "#0d0d10"); // 어두운 배경 위 테두리·글자용
   const weeks = buildMatrix(year, month, games, team.id);
   const cardW = width - pad * 2;
   const cardH = height * 0.42;
@@ -61,11 +62,11 @@ export function Kpop(props: RenderProps) {
                 .map((o): string | null => (o === "win" ? "#36c46b" : o === "lose" ? "#ff5a5a" : o === "draw" ? DRAW_AMBER : o === "canceled" ? "rgba(255,255,255,0.35)" : null))
                 .filter((x): x is string => x !== null);
               return (
-                <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, alignItems: "center", justifyContent: "center", gap: 3 * s, margin: 2 * s, borderRadius: 8 * s, border: today ? `1.5px solid ${accent}` : "1px solid rgba(255,255,255,0.06)", background: c && cell.inMonth ? "rgba(255,255,255,0.03)" : "transparent", padding: `${5 * s}px 0` }}>
+                <div key={di} style={{ display: "flex", flexDirection: "column", flex: 1, alignItems: "center", justifyContent: "center", gap: 3 * s, margin: 2 * s, borderRadius: 8 * s, border: today ? `1.5px solid ${accentOnDark}` : "1px solid rgba(255,255,255,0.06)", background: c && cell.inMonth ? "rgba(255,255,255,0.03)" : "transparent", padding: `${5 * s}px 0` }}>
                   {c && cell.inMonth ? (
                     <div style={{ display: "flex", fontSize: 10 * s, fontWeight: 700, color: c }}>{cell.isHome ? "" : "@"}{cell.opponent?.short}{cell.doubleheader ? "×2" : ""}</div>
                   ) : <div style={{ display: "flex", height: 12 * s }} />}
-                  <div style={{ display: "flex", fontSize: 18 * s, fontWeight: 700, color: today ? accent : !cell.inMonth ? "rgba(255,255,255,0.3)" : "#fff" }}>{cell.day}</div>
+                  <div style={{ display: "flex", fontSize: 18 * s, fontWeight: 700, color: today ? accentOnDark : !cell.inMonth ? "rgba(255,255,255,0.3)" : "#fff" }}>{cell.day}</div>
                   <div style={{ display: "flex", height: 6 * s }}>
                     {dots.map((dc, dj) => (
                       <div key={dj} style={{ display: "flex", width: 6 * s, height: 6 * s, borderRadius: 4, background: dc, marginLeft: dj > 0 ? 2 * s : 0 }} />

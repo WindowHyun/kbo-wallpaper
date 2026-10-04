@@ -131,6 +131,16 @@ export interface FetchOptions {
   teamId?: string; // 비우면 전체
   srIdList?: string;
   signal?: AbortSignal;
+  // true 면 업스트림 캐시를 쓰지 않는다. 진행 중인 달(경기·취소 편성이 바뀜)에 사용.
+  // (Next fetch 캐시는 만료 후 stale 응답을 먼저 내보내므로, 하루 1회 조회하는 클라이언트는
+  //  revalidate 값과 무관하게 24시간 전 데이터를 받게 된다.)
+  fresh?: boolean;
+}
+
+/** 해당 연·월이 KST 기준 현재 달 이후인지 (= 일정·결과가 아직 바뀔 수 있는 달). */
+export function isOngoingPeriod(year: number, month: number): boolean {
+  const d = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return year * 12 + month >= d.getUTCFullYear() * 12 + (d.getUTCMonth() + 1);
 }
 
 /** KBO 일정 API 원본 rows 를 가져온다. */
@@ -164,8 +174,9 @@ export async function fetchScheduleRows(opts: FetchOptions): Promise<Cell[][]> {
     },
     body: body.toString(),
     signal,
-    // KBO 데이터는 하루 단위로만 바뀌므로 6시간 캐시 (Next fetch 캐시)
-    next: { revalidate: 60 * 60 * 6 },
+    // 지난 달 일정은 확정돼 바뀌지 않으므로 6시간 캐시, 진행 중인 달은 fresh 로 매번 조회한다
+    // (응답은 라우트의 CDN s-maxage 가 흡수).
+    ...(opts.fresh ? { cache: "no-store" as const } : { next: { revalidate: 60 * 60 * 6 } }),
   });
 
   if (!res.ok) throw new Error(`KBO API ${res.status}`);

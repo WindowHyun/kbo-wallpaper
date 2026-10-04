@@ -1,7 +1,7 @@
 // 시즌 전체(전 월) 일정을 모아 팀 기준 승/패/무·전적을 계산한다.
 // bento, grass, dots, diamond 스타일이 사용한다.
 
-import { getSchedule, Game } from "./kbo";
+import { getSchedule, isOngoingPeriod, Game } from "./kbo";
 
 export type Outcome = "win" | "lose" | "draw" | "scheduled" | "canceled";
 
@@ -34,11 +34,12 @@ export function teamOutcome(g: Game, teamId: string): { isHome: boolean; outcome
 // 한 달치 조회. 일시적 오류에 대비해 1회 재시도하고, 그래도 실패하면 던진다.
 // 실패를 빈 배열로 삼키면 승·패·전적이 틀린 이미지가 캐시되므로 반드시 표면화한다.
 async function fetchMonth(year: number, month: number, teamId: string): Promise<Game[]> {
+  const fresh = isOngoingPeriod(year, month);
   try {
-    return await getSchedule({ year, month, teamId });
+    return await getSchedule({ year, month, teamId, fresh });
   } catch {
     try {
-      return await getSchedule({ year, month, teamId });
+      return await getSchedule({ year, month, teamId, fresh });
     } catch (e) {
       throw new Error(`${month}월 일정 조회 실패 (${(e as Error).message})`);
     }

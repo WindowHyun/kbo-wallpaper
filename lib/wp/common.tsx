@@ -143,6 +143,9 @@ export function oppNameEn(cell: DayCell): string {
   return cell.opponent?.en ?? "";
 }
 
+
+export { accentFor, contrastRatio } from "../color";
+
 export const RESULT_GREEN = "#36c46b";
 export const RESULT_GREEN_SOFT = "#12331e";
 export const RESULT_GREEN_BD = "#2f6b45";
